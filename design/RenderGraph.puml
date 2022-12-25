@@ -1,0 +1,111 @@
+﻿@startuml
+
+class RenderGraph {
+    + Subgraphs: IDictionary<RenderStage, RenderSubgraph>
+}
+
+class RenderSubgraph {
+    + Tasks: RenderTask[]
+}
+
+abstract class RenderTask {
+    + {abstract} Resources: Resource[]
+    + {abstract} Execute(): void
+}
+
+interface ResourceType {
+    + {abstract} CreateResource(): Resource
+    + {abstract} CreateResourceInstance(): ResourceInstance
+}
+
+class Resource {
+    + ResourceType: ResourceType
+    + Instance: ResourceInstance?
+}
+
+abstract class ResourceInstance {
+    + ResourceType: ResourceType
+    + {abstract} Dispose(): void
+}
+
+package Execution {
+    class SubgraphExecutionPlan {
+        - Steps: ExecutionPlanStep[]
+        - Resources: IDictionary<Resource, ResourceUsage>
+        - ResourceAllocations: ResourceAllocation[]
+        - CurrentAllocation: SubgraphResourcesAllocation?
+        __
+        + Execute(): void
+        ..
+        + AllocateResources(): void
+        + DeallocateResources(): void
+        ..
+        + Dispose(): void
+    }
+    
+    class SubgraphResourcesAllocation {
+        + Resources: Resource[]
+        + ResourceInstances: ResourceInstance[]
+        + Dispose(): void
+    }
+    
+    class SubgraphExecutionPlanner {
+        - Subgraph: RenderSubgraph
+        - Steps: ExecutionPlanStep[]
+        - Resources: ResourceUsage[]
+        - ResourceAllocations: ResourceAllocation[]
+        - UnusedAllocations: ResourceAllocation[]
+        + Plan(): SubgraphExecutionPlan
+        - CreateSteps(): void
+        - CalculateResourceUsages(): void
+        - CalculateResourceAllocations(): void
+        - TakeOrAllocateResource(type: ResourceType): ResourceAllocation
+        - GiveResource(alloc: ResourceAllocation): void
+    }
+    
+    class ExecutionPlanStep {
+        + Task: RenderTask
+        + TakenResources: ResourceUsage[]
+        + GivenResources: ResourceUsage[]
+        + Execute(): void
+    }
+    
+    class ResourceUsage {
+        + Resource: Resource
+        + StepTaken: ExecutionPlanStep
+        + StepGiven: ExecutionPlanStep
+        + Allocation: ResourceAllocation?
+    }
+    
+    class ResourceAllocation {
+        + ResourceType: ResourceType
+        + Usages: ResourceUsage[]
+        + Allocate(): ResourceInstance
+    }
+}
+
+RenderGraph --* RenderSubgraph
+RenderSubgraph --* RenderTask
+RenderTask --o Resource
+
+Resource -o ResourceInstance
+ResourceInstance --o ResourceType
+Resource --o ResourceType
+
+SubgraphExecutionPlanner --> SubgraphExecutionPlan
+SubgraphExecutionPlan --* ResourceUsage
+SubgraphExecutionPlan --* ExecutionPlanStep
+SubgraphExecutionPlan --* SubgraphResourcesAllocation
+SubgraphExecutionPlan --* ResourceAllocation
+
+RenderTask o- ExecutionPlanStep
+ExecutionPlanStep o- ResourceUsage
+ExecutionPlanStep -o ResourceUsage
+ResourceUsage --o Resource
+ResourceUsage -o ResourceAllocation
+ResourceUsage o- ResourceAllocation
+
+SubgraphResourcesAllocation --o ResourceInstance
+SubgraphResourcesAllocation --o Resource
+
+@enduml

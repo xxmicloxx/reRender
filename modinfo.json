@@ -1,0 +1,13 @@
+{
+  "type": "code",
+  "modid": "rerender",
+  "name": "reRender",
+  "authors": [
+    "xxmicloxx"
+  ],
+  "description": "Custom HDR-based rendering engine for Vintage Story",
+  "version": "1.0.0",
+  "dependencies": {
+    "game": ""
+  }
+}
