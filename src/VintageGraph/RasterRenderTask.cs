@@ -32,6 +32,10 @@ public class RasterRenderTask : RenderTask
 
         platform.LoadFrameBuffer(FrameBuffer);
         RenderAction?.Invoke();
+
+        // sampler barrier, cleans up some invalid access
+        for (var i = 0; i < 16; ++i)
+            GL.BindSampler(i, 0);
     }
 
     public override void Allocate()

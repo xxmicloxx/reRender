@@ -88,15 +88,28 @@
     <ItemGroup>
         <Folder Include="assets\" />
         <Folder Include="src\" />
-        <Content Include="assets\rerender\shaders\deferred_chunkopaque.fsh" />
-        <Content Include="assets\rerender\shaders\deferred_chunkopaque.vsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_colormap.fsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_colormap.vsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_deferred.fsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_noise.ash" />
+        <Content Include="assets\rerender\shaders\revanilla_lighting.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_lighting.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_chunkopaque.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_chunkopaque.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_tonemap.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_tonemap.vsh" />
         <Content Include="design\Notes.md" />
         <Content Include="design\RenderGraph.puml" />
         <Content Include="modinfo.json" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="src\Engine\CommonUniforms.cs" />
         <Compile Include="src\Engine\EngineCore.cs" />
         <Compile Include="src\Engine\ReRenderEngine.cs" />
+        <Compile Include="src\Extensions\InstancedBlocksPools.cs" />
+        <Compile Include="src\Extensions\Shaders.cs" />
         <Compile Include="src\Graph\ExecutionPlanStep.cs" />
         <Compile Include="src\Graph\Resource.cs" />
         <Compile Include="src\Graph\ResourceAllocation.cs" />
@@ -112,8 +125,9 @@
         <Compile Include="src\HarmonyPatches.cs" />
         <Compile Include="src\Graph\RenderGraph.cs" />
         <Compile Include="src\ReRenderMod.cs" />
-        <Compile Include="src\HelperExtensions.cs" />
-        <Compile Include="src\VanillaRenderGraph.cs" />
+        <Compile Include="src\ReVanilla\PlantsRenderer.cs" />
+        <Compile Include="src\ReVanilla\ReVanillaRenderGraph.cs" />
+        <Compile Include="src\ReVanilla\VanillaEmulation.cs" />
         <Compile Include="src\VintageGraph\ExternalTextureTarget.cs" />
         <Compile Include="src\VintageGraph\ITextureTarget.cs" />
         <Compile Include="src\VintageGraph\ResourceTextureTarget.cs" />

@@ -23,6 +23,10 @@ public class TextureResourceInstance : ResourceInstance<TextureResourceType>
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)type.Filtering);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)type.WrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)type.WrapMode);
+
+        if (type.BorderColor != null)
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBorderColor,
+                (float[])type.BorderColor);
     }
 
     public override TextureResourceType ResourceType { get; }

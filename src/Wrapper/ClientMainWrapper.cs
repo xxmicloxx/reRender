@@ -2,6 +2,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.Client.NoObf;
+using Vintagestory.Common;
 
 namespace ReRender.Wrapper;
 
@@ -77,6 +78,8 @@ public class ClientMainWrapper
     public bool DoTransparentRenderPass => DoTransparentRenderPassGetter(_client!);
     public float[] CurrentProjectionMatrix => _client!.CurrentProjectionMatrix;
     public float[] CurrentModelViewMatrix => _client!.CurrentModelViewMatrix;
+    public IClientGameCalendar Calendar => _client!.Calendar;
+    public ClientGameCalendar GameWorldCalendar => (ClientGameCalendar)Calendar;
 
     public PlayerCameraWrapper MainCamera
     {

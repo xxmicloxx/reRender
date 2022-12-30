@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using ReRender.Engine;
 using ReRender.Graph;
+using ReRender.ReVanilla;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.Client;
@@ -16,15 +17,25 @@ public class ReRenderMod : ModSystem
     public ReRenderEngine? RenderEngine { get; private set; }
     public VanillaRenderGraph? VanillaRenderGraph { get; private set; }
 
-    public override void StartClientSide(ICoreClientAPI api)
+    public override bool ShouldLoad(EnumAppSide forSide)
     {
-        Api = api;
+        return forSide == EnumAppSide.Client;
+    }
+
+    public override void StartPre(ICoreAPI api)
+    {
+        if (api is not ICoreClientAPI clientApi) return;
+        
+        Api = clientApi;
         Instance = this;
 
         RenderGraph = new RenderGraph();
         RenderEngine = new ReRenderEngine(this, RenderGraph);
         VanillaRenderGraph = new VanillaRenderGraph(this, RenderGraph);
+    }
 
+    public override void StartClientSide(ICoreClientAPI api)
+    {
         PatchGame();
 
         // recreate all buffers

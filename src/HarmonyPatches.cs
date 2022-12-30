@@ -48,15 +48,6 @@ public static class ClientPlatformWindowsPatches
         return false;
     }
 
-    /*[HarmonyPatch("BlitPrimaryToDefault")]
-    [HarmonyPrefix]
-    private static bool BlitPrimaryToDefaultPrefix(ClientPlatformWindows __instance)
-    {
-        // We do that ourselves, not the game
-        //__instance.LoadFrameBuffer(EnumFrameBuffer.Default);
-        return true;
-    }*/
-
     [HarmonyPatch("SetupDefaultFrameBuffers")]
     [HarmonyPostfix]
     private static void SetupDefaultFrameBuffersPostfix(List<FrameBufferRef> __result, MeshRef ___screenQuad)

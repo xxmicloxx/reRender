@@ -18,10 +18,12 @@ public class EngineCore
 {
     private readonly ClientMainWrapper _client;
     private readonly RenderGraph _renderGraph;
+    private readonly CommonUniforms _uniforms;
 
-    public EngineCore(RenderGraph renderGraph)
+    public EngineCore(RenderGraph renderGraph, CommonUniforms uniforms)
     {
         _renderGraph = renderGraph;
+        _uniforms = uniforms;
         _client = new ClientMainWrapper();
     }
 
@@ -49,6 +51,7 @@ public class EngineCore
         shUniforms.ZNear = _client.MainCamera.ZNear;
         shUniforms.ZFar = _client.MainCamera.ZFar;
         _client.TriggerRenderStage(EnumRenderStage.Before, dt);
+        _uniforms.Update();
         _client.Platform.GlEnableDepthTest();
         _client.Platform.GlDepthMask(true);
         if (ambientManager.ShadowQuality > 0 && ambientManager.DropShadowIntensity > 0.01)

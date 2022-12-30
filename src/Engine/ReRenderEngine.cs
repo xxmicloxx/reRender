@@ -10,14 +10,15 @@ public class ReRenderEngine
 {
     private readonly EngineCore _core;
     private readonly ReRenderMod _mod;
-    private readonly RenderGraph _renderGraph;
     private MeshRef? _screenQuad;
+
+    public CommonUniforms Uniforms { get; }
 
     public ReRenderEngine(ReRenderMod mod, RenderGraph renderGraph)
     {
         _mod = mod;
-        _renderGraph = renderGraph;
-        _core = new EngineCore(renderGraph);
+        Uniforms = new CommonUniforms(mod);
+        _core = new EngineCore(renderGraph, Uniforms);
     }
 
     public void AfterFramebufferInit(List<FrameBufferRef> framebuffers, MeshRef screenQuad)
