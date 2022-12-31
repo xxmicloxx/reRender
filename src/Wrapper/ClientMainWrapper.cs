@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Common.Entities;
 using Vintagestory.Client.NoObf;
 using Vintagestory.Common;
 
@@ -44,6 +46,12 @@ public class ClientMainWrapper
     private static readonly Getter<ChunkRenderer> ChunkRendererGetter =
         CreateGetter<ChunkRenderer>("chunkRenderer");
 
+    private static readonly Getter<EntityTextureAtlasManager> EntityAtlasManagerGetter =
+        CreateGetter<EntityTextureAtlasManager>("EntityAtlasManager");
+
+    private static readonly Getter<Dictionary<Entity, EntityRenderer>> EntityRenderersGetter =
+        CreateGetter<Dictionary<Entity, EntityRenderer>>("EntityRenderers");
+
     private readonly AmbientManagerWrapper _ambientManagerWrapper = new();
     private readonly ChunkRendererWrapper _chunkRendererWrapper = new();
     private readonly PlayerCameraWrapper _mainCameraWrapper = new();
@@ -80,6 +88,8 @@ public class ClientMainWrapper
     public float[] CurrentModelViewMatrix => _client!.CurrentModelViewMatrix;
     public IClientGameCalendar Calendar => _client!.Calendar;
     public ClientGameCalendar GameWorldCalendar => (ClientGameCalendar)Calendar;
+    public EntityTextureAtlasManager EntityAtlasManager => EntityAtlasManagerGetter(_client!);
+    public Dictionary<Entity, EntityRenderer> EntityRenderers => EntityRenderersGetter(_client!);
 
     public PlayerCameraWrapper MainCamera
     {

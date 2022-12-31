@@ -1,4 +1,5 @@
-﻿using Vintagestory.Client.NoObf;
+﻿using Vintagestory.API.Client;
+using Vintagestory.Client.NoObf;
 
 namespace ReRender.Wrapper;
 

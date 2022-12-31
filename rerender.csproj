@@ -92,9 +92,13 @@
         <Content Include="assets\rerender\shaderincludes\revanilla_colormap.vsh" />
         <Content Include="assets\rerender\shaderincludes\revanilla_colorspace.ash" />
         <Content Include="assets\rerender\shaderincludes\revanilla_deferred.fsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_effect.fsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_gbflags.ash" />
         <Content Include="assets\rerender\shaderincludes\revanilla_noise.ash" />
         <Content Include="assets\rerender\shaderincludes\revanilla_shadow.fsh" />
         <Content Include="assets\rerender\shaderincludes\revanilla_warping.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_entityanimated.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_entityanimated.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_flowers.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_flowers.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_lighting.fsh" />
@@ -113,6 +117,7 @@
         <Compile Include="src\Engine\CommonUniforms.cs" />
         <Compile Include="src\Engine\EngineCore.cs" />
         <Compile Include="src\Engine\ReRenderEngine.cs" />
+        <Compile Include="src\Extensions\EntityShapeRenderers.cs" />
         <Compile Include="src\Extensions\InstancedBlocksPools.cs" />
         <Compile Include="src\Extensions\Shaders.cs" />
         <Compile Include="src\Graph\ExecutionPlanStep.cs" />
@@ -130,6 +135,8 @@
         <Compile Include="src\HarmonyPatches.cs" />
         <Compile Include="src\Graph\RenderGraph.cs" />
         <Compile Include="src\ReRenderMod.cs" />
+        <Compile Include="src\ReVanilla\ChunkRenderer.cs" />
+        <Compile Include="src\ReVanilla\EntityRenderer.cs" />
         <Compile Include="src\ReVanilla\PlantsRenderer.cs" />
         <Compile Include="src\ReVanilla\ReVanillaRenderGraph.cs" />
         <Compile Include="src\ReVanilla\VanillaEmulation.cs" />

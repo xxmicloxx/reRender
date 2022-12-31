@@ -117,11 +117,13 @@ public class EngineCore
         // create a primary buffer for the game to render to
         primaryBuffer.ColorTextureIds = new[] { GL.GenTexture() };
 
+        var filterMode = ClientSettings.SSAA <= 1f ? TextureMinFilter.Nearest : TextureMinFilter.Linear;
+        
         GL.BindTexture(Texture2D, primaryBuffer.ColorTextureIds[0]);
         GL.TexImage2D(Texture2D, 0, Rgba8, primaryBuffer.Width, primaryBuffer.Height, 0, PixelFormat.Rgba,
             UnsignedShort, IntPtr.Zero);
-        GL.TexParameter(Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.TexParameter(Texture2D, TextureParameterName.TextureMinFilter, (int)filterMode);
+        GL.TexParameter(Texture2D, TextureParameterName.TextureMagFilter, (int)filterMode);
         GL.FramebufferTexture2D(Framebuffer, ColorAttachment0, Texture2D, primaryBuffer.ColorTextureIds[0], 0);
 
         GL.DrawBuffers(1, new[] { DrawBuffersEnum.ColorAttachment0 });

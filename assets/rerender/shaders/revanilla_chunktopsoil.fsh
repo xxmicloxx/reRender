@@ -17,6 +17,7 @@ uniform vec2 u_blockTextureSize;
 
 #include revanilla_colormap.fsh
 #include revanilla_colorspace.ash
+#include revanilla_gbflags.ash
 
 void main(void) {
     vec4 texColor;
@@ -38,8 +39,10 @@ void main(void) {
     texColor = colorspace_toLinear(texColor);
 
     if (texColor.a < 0.01) discard;
+    
+    int gbflags = 0;
 
     o_color = vec4(texColor.rgb, 1.0);
-    o_normal = vec4(v_vsNormal, 1.0);
+    o_normal = vec4(v_vsNormal, gbflags_pack(gbflags));
     o_lighting = v_rgbaLight;
 }

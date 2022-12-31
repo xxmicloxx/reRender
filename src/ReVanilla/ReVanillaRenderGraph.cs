@@ -15,6 +15,9 @@ public class VanillaRenderGraph : IDisposable
     private readonly RenderGraph _renderGraph;
     private readonly WeatherSystemClient _weatherSystem;
 
+    private readonly ChunkRenderer _chunkRenderer;
+    private readonly EntityRenderer _entityRenderer;
+
     private ShaderProgram? _chunkOpaqueShader;
     private ShaderProgram? _chunkTopSoilShader;
     private ShaderProgram? _flowersShader;
@@ -33,6 +36,9 @@ public class VanillaRenderGraph : IDisposable
         _renderGraph = renderGraph;
         _weatherSystem = mod.Api!.ModLoader.GetModSystem<WeatherSystemClient>();
 
+        _chunkRenderer = new ChunkRenderer(mod);
+        _entityRenderer = new EntityRenderer(mod);
+
         _renderGraph.Updating += OnRenderGraphUpdate;
         _mod.Api!.Event.ReloadShader += LoadShaders;
     }
@@ -41,9 +47,9 @@ public class VanillaRenderGraph : IDisposable
     {
         _mod.Api!.Event.ReloadShader -= LoadShaders;
         
-        _chunkOpaqueShader?.Dispose();
-        _chunkTopSoilShader?.Dispose();
-        _flowersShader?.Dispose();
+        _chunkRenderer.Dispose();
+        _entityRenderer.Dispose();
+
         _tonemapShader?.Dispose();
         _lightingShader?.Dispose();
 
@@ -52,21 +58,17 @@ public class VanillaRenderGraph : IDisposable
 
     private bool LoadShaders()
     {
-        _chunkOpaqueShader?.Dispose();
-        _chunkTopSoilShader?.Dispose();
-        _flowersShader?.Dispose();
+        var success = true;
+        
+        _chunkRenderer.LoadShaders(ref success);
+        _entityRenderer.LoadShaders(ref success);
+
         _tonemapShader?.Dispose();
         _lightingShader?.Dispose();
 
-        var success = true;
-        _chunkOpaqueShader = _mod.RegisterShader("revanilla_chunkopaque", ref success);
-        _chunkTopSoilShader = _mod.RegisterShader("revanilla_chunktopsoil", ref success);
-        _flowersShader = _mod.RegisterShader("revanilla_flowers", ref success);
         _tonemapShader = _mod.RegisterShader("revanilla_tonemap", ref success);
         _lightingShader = _mod.RegisterShader("revanilla_lighting", ref success);
-        
-        _chunkTopSoilShader.SetCustomSampler("t_terrainLinear", true);
-        _flowersShader.SetCustomSampler("t_terrainLinear", true);
+
         return success;
     }
 
@@ -112,7 +114,7 @@ public class VanillaRenderGraph : IDisposable
                 _weatherSystem.cloudRenderer.CloudTick(dt);
                 VanillaEmulation.UpdateMissingUniforms(c);
                 
-                FillGBuffers(c);
+                FillGBuffers(dt, c);
             }
         };
         target.Tasks.Add(deferred);
@@ -168,92 +170,14 @@ public class VanillaRenderGraph : IDisposable
         }
     }
 
-    private void FillGBuffers(UpdateContext c)
+    private void FillGBuffers(float dt, UpdateContext c)
     {
         GL.Clear(ClearBufferMask.DepthBufferBit);
         GL.ClearBuffer(ClearBuffer.Color, 0, new[] { 0f, 0f, 0f, 0f });
         GL.ClearBuffer(ClearBuffer.Color, 1, new[] { 1f, 1f, 1f, 1f });
         GL.ClearBuffer(ClearBuffer.Color, 2, new[] { 0f, 0f, 0f, 0f });
 
-        c.SetupDraw(BlendMode.Disabled, DepthMode.Enabled, CullMode.Enabled);
-        c.PushModelViewMatrix(c.Game.MainCamera.CameraMatrixOrigin);
-
-        var chunkRenderer = c.Game.ChunkRenderer;
-
-        var camPos = c.Game.EntityPlayer!.CameraPos!;
-        var texIds = chunkRenderer.TextureIds;
-
-        using (_chunkOpaqueShader!.Bind())
-        {
-            var s = _chunkOpaqueShader!;
-            c.BindKnownUniforms(s);
-            s.Uniform("u_alphaTest", 0.001f);
-
-            for (var l = 0; l < texIds.Length; ++l)
-            {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
-                chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.Opaque][l].Render(camPos, "u_origin");
-            }
-        }
-
-        using (_chunkTopSoilShader!.Bind())
-        {
-            var s = _chunkTopSoilShader!;
-            c.BindKnownUniforms(s);
-
-            for (var l = 0; l < texIds.Length; ++l)
-            {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
-                chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.TopSoil][l].Render(camPos, "u_origin");
-            }
-        }
-
-        using (_chunkOpaqueShader!.Bind())
-        {
-            c.SetupDraw(BlendMode.Disabled, DepthMode.Enabled, CullMode.Disabled);
-            
-            var s = _chunkOpaqueShader!;
-            c.BindKnownUniforms(s);
-            s.Uniform("u_alphaTest", 0.25f);
-            
-            for (var l = 0; l < texIds.Length; ++l)
-            {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
-                chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.BlendNoCull][l].Render(camPos, "u_origin");
-            }
-            
-            s.Uniform("u_alphaTest", 0.42f);
-            for (var l = 0; l < texIds.Length; ++l)
-            {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
-                chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.OpaqueNoCull][l].Render(camPos, "u_origin");
-            }
-        }
-
-        DrawInstancedObjects(c);
-
-        c.PopModelViewMatrix();
-    }
-
-    private void DrawInstancedObjects(UpdateContext c)
-    {
-        var chunkRenderer = c.Game.ChunkRenderer;
-        var texIds = chunkRenderer.TextureIds;
-        
-        c.SetupDraw(BlendMode.Disabled, DepthMode.Enabled, CullMode.Enabled);
-
-        var s = _flowersShader!;
-        using (s.Bind())
-        {
-            PlantsRenderer.StartRenderInstanced(c, s, texIds[0]);
-            foreach (var item in chunkRenderer.AllInstancedFlowers)
-            {
-                PlantsRenderer.RenderInstance(item!, c, s);
-            }
-        }
+        _chunkRenderer.Render(c);
+        _entityRenderer.Render(dt, c);
     }
 }

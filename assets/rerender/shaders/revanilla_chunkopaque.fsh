@@ -19,6 +19,7 @@ uniform float u_viewDistanceLod0;
 #include vertexflagbits.ash
 #include revanilla_colormap.fsh
 #include revanilla_colorspace.ash
+#include revanilla_gbflags.ash
 
 float calculateAlphaTest(vec4 texColor) {
     float aTest = texColor.a;
@@ -46,8 +47,10 @@ void main(void) {
 
     float aTest = calculateAlphaTest(texColor);
     if (aTest < u_alphaTest) discard;
-
+    
+    int gbflags = 0;
+    
     o_color = vec4(texColor.xyz, 1.0);
-    o_normal = vec4(v_vsNormal, 1.0);
+    o_normal = vec4(v_vsNormal, gbflags_pack(gbflags));
     o_lighting = v_rgbaLight;
 }

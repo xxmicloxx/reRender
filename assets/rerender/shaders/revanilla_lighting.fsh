@@ -17,6 +17,7 @@ uniform vec3 u_lightDirection;
 
 #include revanilla_deferred.fsh
 #include revanilla_shadow.fsh
+#include revanilla_gbflags.ash
 
 float lighting_calculateSunlightAmount(vec3 wsPosition, vec3 wsNormal, float sunlightLevel) {
     float nDotL = max(0.0, dot(wsNormal, u_lightDirection));
@@ -38,7 +39,7 @@ vec3 lighting_calculateInfluence(vec3 wsPosition, vec3 wsNormal, vec4 lighting) 
 
     vec3 ambient = vec3(0.1);
     vec3 skylightAmbient = vec3(sunlightLevel * 1.5) * skylightColor;
-    vec3 skylightTop = vec3(max(0.0, dot(wsNormal, vec3(0, 1, 0))) * sunlightLevel * 1) * skylightColor;
+    vec3 skylightTop = vec3(max(0.0, dot(wsNormal, vec3(0, 1, 0))) * sunlightLevel) * skylightColor;
     vec3 sunlight = vec3(lighting_calculateSunlightAmount(wsPosition, wsNormal, sunlightLevel)) * sunlightColor;
 
     return ambient + skylightAmbient + skylightTop + sunlight;
@@ -49,9 +50,11 @@ void main(void)
     vec4 color = texture(t_color, v_texCoord);
     if (color.a < 0.25) discard;
 
-    vec4 wsPosition = deferred_getWsPosition();
+    vec4 normalSample = texture(t_normal, v_texCoord);
+    int gbflags = gbflags_unpack(normalSample);
     
-    vec4 vsNormal = vec4(texture(t_normal, v_texCoord).xyz, 0.0);
+    vec4 wsPosition = deferred_getWsPosition();
+    vec4 vsNormal = vec4(normalSample.xyz, 0.0);
     vec4 wsNormal = u_invModelView * vsNormal;
     
     vec4 lighting = texture(t_lighting, v_texCoord);
