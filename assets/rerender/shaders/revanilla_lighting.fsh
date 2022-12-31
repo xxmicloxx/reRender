@@ -38,7 +38,7 @@ vec3 lighting_calculateInfluence(vec3 wsPosition, vec3 wsNormal, vec4 lighting) 
 
     vec3 ambient = vec3(0.1);
     vec3 skylightAmbient = vec3(sunlightLevel * 1.5) * skylightColor;
-    vec3 skylightTop = vec3(max(0.0, dot(wsNormal, vec3(0, 1, 0))) * sunlightLevel) * skylightColor;
+    vec3 skylightTop = vec3(max(0.0, dot(wsNormal, vec3(0, 1, 0))) * sunlightLevel * 1) * skylightColor;
     vec3 sunlight = vec3(lighting_calculateSunlightAmount(wsPosition, wsNormal, sunlightLevel)) * sunlightColor;
 
     return ambient + skylightAmbient + skylightTop + sunlight;

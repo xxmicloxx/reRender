@@ -16,6 +16,7 @@ uniform sampler2D t_terrainLinear;
 uniform vec2 u_blockTextureSize;
 
 #include revanilla_colormap.fsh
+#include revanilla_colorspace.ash
 
 void main(void) {
     vec4 texColor;
@@ -34,7 +35,7 @@ void main(void) {
         texColor = brownSoilColor * (1 - grassColor.a) + grassColor * grassColor.a;
     }
     
-    texColor = pow(texColor, vec4(2.2));
+    texColor = colorspace_toLinear(texColor);
 
     if (texColor.a < 0.01) discard;
 

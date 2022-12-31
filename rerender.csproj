@@ -90,8 +90,13 @@
         <Folder Include="src\" />
         <Content Include="assets\rerender\shaderincludes\revanilla_colormap.fsh" />
         <Content Include="assets\rerender\shaderincludes\revanilla_colormap.vsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_colorspace.ash" />
         <Content Include="assets\rerender\shaderincludes\revanilla_deferred.fsh" />
         <Content Include="assets\rerender\shaderincludes\revanilla_noise.ash" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_shadow.fsh" />
+        <Content Include="assets\rerender\shaderincludes\revanilla_warping.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_flowers.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_flowers.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_lighting.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_lighting.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_chunkopaque.fsh" />

@@ -4,8 +4,6 @@ using ReRender.Extensions;
 using ReRender.Graph;
 using ReRender.VintageGraph;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
-using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
@@ -218,7 +216,7 @@ public class VanillaRenderGraph : IDisposable
             
             var s = _chunkOpaqueShader!;
             c.BindKnownUniforms(s);
-            s.Uniform("u_alphaTest", 0.05f);
+            s.Uniform("u_alphaTest", 0.25f);
             
             for (var l = 0; l < texIds.Length; ++l)
             {
@@ -227,7 +225,7 @@ public class VanillaRenderGraph : IDisposable
                 chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.BlendNoCull][l].Render(camPos, "u_origin");
             }
             
-            s.Uniform("u_alphaTest", 0.15f);
+            s.Uniform("u_alphaTest", 0.42f);
             for (var l = 0; l < texIds.Length; ++l)
             {
                 s.BindTexture2D("t_terrain", texIds[l]);

@@ -18,6 +18,7 @@ uniform float u_viewDistanceLod0;
 
 #include vertexflagbits.ash
 #include revanilla_colormap.fsh
+#include revanilla_colorspace.ash
 
 float calculateAlphaTest(vec4 texColor) {
     float aTest = texColor.a;
@@ -40,7 +41,8 @@ float calculateAlphaTest(vec4 texColor) {
 }
 
 void main(void) {
-    vec4 texColor = pow(colormap_getMapped(t_terrainLinear, texture(t_terrain, v_uv)), vec4(2.2));
+    vec4 texColor = colormap_getMapped(t_terrainLinear, texture(t_terrain, v_uv));
+    texColor = colorspace_toLinear(texColor);
 
     float aTest = calculateAlphaTest(texColor);
     if (aTest < u_alphaTest) discard;

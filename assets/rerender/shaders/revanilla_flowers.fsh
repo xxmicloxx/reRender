@@ -16,13 +16,14 @@ uniform sampler2D t_terrainLinear;
 uniform float u_alphaTest;
 
 #include revanilla_colormap.fsh
+#include revanilla_colorspace.ash
 
 void main(void) {
     if (v_alpha < 0.005) discard;
 
     vec4 petalColor = texture(t_terrain, v_uv);
     vec4 texColor = (petalColor.a > 0.005 ? colormap_getFrosted(petalColor) : colormap_getMapped(t_terrainLinear, texture(t_terrain, v_uvstem))) * vec4(vec3(1.0), v_alpha);
-    texColor = pow(texColor, vec4(2.2));
+    texColor = colorspace_toLinear(texColor);
 
     if (texColor.a < u_alphaTest) discard;
 
