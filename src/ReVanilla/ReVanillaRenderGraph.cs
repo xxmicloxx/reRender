@@ -4,6 +4,7 @@ using ReRender.Extensions;
 using ReRender.Graph;
 using ReRender.VintageGraph;
 using Vintagestory.API.Client;
+using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
 using Vintagestory.GameContent;
 
@@ -18,16 +19,19 @@ public class VanillaRenderGraph : IDisposable
     private readonly ChunkRenderer _chunkRenderer;
     private readonly EntityRenderer _entityRenderer;
 
-    private ShaderProgram? _chunkOpaqueShader;
-    private ShaderProgram? _chunkTopSoilShader;
-    private ShaderProgram? _flowersShader;
     private ShaderProgram? _tonemapShader;
     private ShaderProgram? _lightingShader;
+    private ShaderProgram? _ssaoShader;
+    private ShaderProgram? _bilateralBlurShader;
 
     private TextureResourceType? _colorBufferTextureType;
     private TextureResourceType? _depthBufferTextureType;
     private TextureResourceType? _gBufferTextureType;
+    private TextureResourceType? _ssaoTextureType;
 
+    private readonly int _ssaoNoiseTexture;
+    private readonly float[] _ssaoKernel = new float[192];
+    
     private ITextureTarget? _primaryTextureTarget;
 
     public VanillaRenderGraph(ReRenderMod mod, RenderGraph renderGraph)
@@ -38,20 +42,70 @@ public class VanillaRenderGraph : IDisposable
 
         _chunkRenderer = new ChunkRenderer(mod);
         _entityRenderer = new EntityRenderer(mod);
-
+        
+        _ssaoNoiseTexture = GL.GenTexture();
+        InitSsao();
+        
         _renderGraph.Updating += OnRenderGraphUpdate;
         _mod.Api!.Event.ReloadShader += LoadShaders;
+    }
+
+    private void InitSsao()
+    {
+        var rand = new Random();
+        
+        const int size = 16;
+        var vecs = new float[size * size * 3];
+        var tmpVec = new Vec3f();
+        for (var i = 0; i < size * size; ++i)
+        {
+            tmpVec.Set((float)rand.NextDouble() * 2f - 1f, (float)rand.NextDouble() * 2f - 1f, 0f).Normalize();
+            vecs[i * 3] = tmpVec.X;
+            vecs[i * 3 + 1] = tmpVec.Y;
+            vecs[i * 3 + 2] = tmpVec.Z;
+        }
+        
+        GL.BindTexture(TextureTarget.Texture2D, _ssaoNoiseTexture);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgb32f, size, size,
+            0, PixelFormat.Rgb, PixelType.Float, vecs);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, 
+            (int)TextureMinFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
+            (int)TextureMagFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
+            (int)TextureWrapMode.Repeat);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
+            (int)TextureWrapMode.Repeat);
+
+        for (var i = 0; i < 64; ++i)
+        {
+            tmpVec.Set((float)rand.NextDouble() * 2f - 1f, (float)rand.NextDouble() * 2f - 1f,
+                (float)rand.NextDouble());
+
+            tmpVec.Normalize();
+            tmpVec *= (float)rand.NextDouble();
+            var scale = i / 64f;
+            scale = GameMath.Lerp(0.1f, 1f, scale * scale);
+            tmpVec *= scale;
+            _ssaoKernel[i * 3] = tmpVec.X;
+            _ssaoKernel[i * 3 + 1] = tmpVec.Y;
+            _ssaoKernel[i * 3 + 2] = tmpVec.Z;
+        }
     }
 
     public void Dispose()
     {
         _mod.Api!.Event.ReloadShader -= LoadShaders;
         
+        GL.DeleteTexture(_ssaoNoiseTexture);
+        
         _chunkRenderer.Dispose();
         _entityRenderer.Dispose();
 
         _tonemapShader?.Dispose();
         _lightingShader?.Dispose();
+        _ssaoShader?.Dispose();
+        _bilateralBlurShader?.Dispose();
 
         _renderGraph.Updating -= OnRenderGraphUpdate;
     }
@@ -65,9 +119,13 @@ public class VanillaRenderGraph : IDisposable
 
         _tonemapShader?.Dispose();
         _lightingShader?.Dispose();
+        _ssaoShader?.Dispose();
+        _bilateralBlurShader?.Dispose();
 
         _tonemapShader = _mod.RegisterShader("revanilla_tonemap", ref success);
         _lightingShader = _mod.RegisterShader("revanilla_lighting", ref success);
+        _ssaoShader = _mod.RegisterShader("revanilla_ssao", ref success);
+        _bilateralBlurShader = _mod.RegisterShader("revanilla_bilateralblur", ref success);
 
         return success;
     }
@@ -86,6 +144,16 @@ public class VanillaRenderGraph : IDisposable
         {
             WrapMode = TextureWrapMode.ClampToBorder,
             BorderColor = new[] { 1f, 1f, 1f, 1f }
+        }.Build();
+
+        var ssaoSize = new Size2i(
+            (int)(context.RenderSize.Width * 0.5),
+            (int)(context.RenderSize.Height * 0.5)
+        );
+        
+        _ssaoTextureType = new TextureResourceTypeBuilder(ssaoSize, PixelInternalFormat.R8)
+        {
+            Filtering = TextureMinFilter.Linear
         }.Build();
 
         var primaryFb = context.FrameBuffers[(int)EnumFrameBuffer.Primary]!;
@@ -118,15 +186,44 @@ public class VanillaRenderGraph : IDisposable
             }
         };
         target.Tasks.Add(deferred);
-        
+
+        var occlusionBuffer = _ssaoTextureType!.CreateResource();
+        var occlusionTask = new RasterRenderTask
+        {
+            ColorTargets = new ITextureTarget[] { occlusionBuffer.ToTextureTarget() },
+            AdditionalResources = new Resource[] { depthBuffer, gBufferNormal },
+            RenderAction = _ =>
+            {
+                CalculateOcclusion(c, depthBuffer, gBufferNormal);
+            }
+        };
+        target.Tasks.Add(occlusionTask);
+
+        var ssaoSource = occlusionBuffer;
+        for (var i = 0; i < 1; ++i)
+        {
+            var blurHorTarget = _ssaoTextureType.CreateResource();
+            var blurHorTask =
+                CreateBilateralBlurTask(c, blurHorTarget.ToTextureTarget(), ssaoSource, depthBuffer, false);
+            target.Tasks.Add(blurHorTask);
+
+            var blurVerTarget = _ssaoTextureType.CreateResource();
+            var blurVerTask =
+                CreateBilateralBlurTask(c, blurVerTarget.ToTextureTarget(), blurHorTarget, depthBuffer, true);
+            target.Tasks.Add(blurVerTask);
+
+            ssaoSource = blurVerTarget;
+        }
+
         var lightingOutput = _gBufferTextureType!.CreateResource();
         var lighting = new RasterRenderTask
         {
             ColorTargets = new ITextureTarget[] { lightingOutput.ToTextureTarget() },
-            AdditionalResources = new Resource[] { depthBuffer, gBufferColor, gBufferNormal, gBufferLighting },
+            AdditionalResources = new Resource[]
+                { depthBuffer, gBufferColor, gBufferNormal, gBufferLighting, ssaoSource },
             RenderAction = _ =>
             {
-                CalculateLighting(c, depthBuffer, gBufferColor, gBufferNormal, gBufferLighting);
+                CalculateLighting(c, depthBuffer, gBufferColor, gBufferNormal, gBufferLighting, ssaoSource);
             }
         };
         target.Tasks.Add(lighting);
@@ -151,8 +248,69 @@ public class VanillaRenderGraph : IDisposable
         target.Tasks.Add(output);
     }
 
+    private RenderTask CreateBilateralBlurTask(UpdateContext c, ITextureTarget target, TextureResource source,
+        TextureResource depth, bool vertical)
+    {
+        return new RasterRenderTask
+        {
+            ColorTargets = new [] { target },
+            AdditionalResources = new Resource[] { source, depth },
+            RenderAction = _ =>
+            {
+                c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
+
+                var s = _bilateralBlurShader!;
+                using (s.Bind())
+                {
+                    s.BindTexture2D("t_input", source.Instance!.TextureId);
+                    s.BindTexture2D("t_depth", depth.Instance!.TextureId);
+                    s.Uniform("u_isVertical", vertical ? 1 : 0);
+                    s.Uniform("u_frameSize", new Vec2f(_ssaoTextureType!.Width, _ssaoTextureType.Height));
+                    _mod.RenderEngine!.DrawFullscreenPass();
+                }
+            }
+        };
+    }
+
+    private RenderTask CreateBlitTask(UpdateContext c, ITextureTarget target, TextureResource source)
+    {
+        return new RasterRenderTask
+        {
+            ColorTargets = new[] { target },
+            AdditionalResources = new Resource[] { source },
+            RenderAction = _ =>
+            {
+                c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
+                var s = ShaderPrograms.Blit;
+                using (s.Bind())
+                {
+                    s.Scene2D = source.Instance!.TextureId;
+                    _mod.RenderEngine!.DrawFullscreenPass();
+                }
+            }
+        };
+    }
+    
+    private void CalculateOcclusion(UpdateContext c, TextureResource depthBuffer, TextureResource gBufferNormal)
+    {
+        GL.ClearBuffer(ClearBuffer.Color, 0, new[] { 1f, 1f, 1f, 1f });
+        c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
+
+        var s = _ssaoShader!;
+        using (s.Bind())
+        {
+            c.BindKnownUniforms(s);
+            s.BindTexture2D("t_depth", depthBuffer.Instance!.TextureId, 0);
+            s.BindTexture2D("t_normal", gBufferNormal.Instance!.TextureId, 1);
+            s.BindTexture2D("t_noise", _ssaoNoiseTexture, 2);
+            s.Uniform("u_screenSize", new Vec2f(_ssaoTextureType!.Width, _ssaoTextureType.Height));
+            s.Uniforms3("u_samples", 64, _ssaoKernel);
+            _mod.RenderEngine!.DrawFullscreenPass();
+        }
+    }
+
     private void CalculateLighting(UpdateContext c, TextureResource depthBuffer, TextureResource gBufferColor,
-        TextureResource gBufferNormal, TextureResource gBufferLighting)
+        TextureResource gBufferNormal, TextureResource gBufferLighting, TextureResource ssaoSource)
     {
         GL.ClearBuffer(ClearBuffer.Color, 0, new[] { 0.84f, 2.8f, 4f, 0f });
 
@@ -166,6 +324,7 @@ public class VanillaRenderGraph : IDisposable
             s.BindTexture2D("t_color", gBufferColor.Instance!.TextureId, 1);
             s.BindTexture2D("t_normal", gBufferNormal.Instance!.TextureId, 2);
             s.BindTexture2D("t_lighting", gBufferLighting.Instance!.TextureId, 3);
+            s.BindTexture2D("t_occlusion", ssaoSource.Instance!.TextureId, 4);
             _mod.RenderEngine!.DrawFullscreenPass();
         }
     }

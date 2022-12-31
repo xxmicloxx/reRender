@@ -97,6 +97,8 @@
         <Content Include="assets\rerender\shaderincludes\revanilla_noise.ash" />
         <Content Include="assets\rerender\shaderincludes\revanilla_shadow.fsh" />
         <Content Include="assets\rerender\shaderincludes\revanilla_warping.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_bilateralblur.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_bilateralblur.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_entityanimated.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_entityanimated.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_flowers.fsh" />
@@ -107,6 +109,8 @@
         <Content Include="assets\rerender\shaders\revanilla_chunkopaque.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_ssao.fsh" />
+        <Content Include="assets\rerender\shaders\revanilla_ssao.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.vsh" />
         <Content Include="design\Notes.md" />

@@ -10,6 +10,7 @@ uniform sampler2D t_depth;
 uniform sampler2D t_color;
 uniform sampler2D t_normal;
 uniform sampler2D t_lighting;
+uniform sampler2D t_occlusion;
 
 uniform mat4 u_invModelView;
 uniform mat4 u_invProjection;
@@ -31,16 +32,16 @@ float lighting_calculateSunlightAmount(vec3 wsPosition, vec3 wsNormal, float sun
     return brightness * sunlight;
 }
 
-vec3 lighting_calculateInfluence(vec3 wsPosition, vec3 wsNormal, vec4 lighting) {
+vec3 lighting_calculateInfluence(vec3 wsPosition, vec3 wsNormal, vec4 lighting, float occlusion) {
     float sunlightLevel = pow(lighting.a, 2);
 
     vec3 skylightColor = vec3(0.6, 0.8, 1.0);
     vec3 sunlightColor = vec3(1.0, 0.95, 0.7);
 
-    vec3 ambient = vec3(0.1);
-    vec3 skylightAmbient = vec3(sunlightLevel * 1.5) * skylightColor;
-    vec3 skylightTop = vec3(max(0.0, dot(wsNormal, vec3(0, 1, 0))) * sunlightLevel * 0.5) * skylightColor;
-    vec3 sunlight = vec3(lighting_calculateSunlightAmount(wsPosition, wsNormal, sunlightLevel)) * sunlightColor;
+    vec3 ambient = vec3(0.1) * occlusion;
+    vec3 skylightAmbient = skylightColor * sunlightLevel * 1.5 * occlusion;
+    vec3 skylightTop = max(0.0, dot(wsNormal, vec3(0, 1, 0))) * skylightColor * sunlightLevel * 0.5 * occlusion;
+    vec3 sunlight = lighting_calculateSunlightAmount(wsPosition, wsNormal, sunlightLevel) * sunlightColor;
 
     return ambient + skylightAmbient + skylightTop + sunlight;
 }
@@ -58,8 +59,9 @@ void main(void)
     vec4 wsNormal = u_invModelView * vsNormal;
     
     vec4 lighting = texture(t_lighting, v_texCoord);
+    float occlusion = texture(t_occlusion, v_texCoord).r;
     
-    vec3 totalLight = lighting_calculateInfluence(wsPosition.xyz, wsNormal.xyz, lighting);
+    vec3 totalLight = lighting_calculateInfluence(wsPosition.xyz, wsNormal.xyz, lighting, occlusion);
     
     o_scene = vec4(color.rgb * totalLight, 1.0);
 }

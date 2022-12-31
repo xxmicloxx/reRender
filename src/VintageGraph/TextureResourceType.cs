@@ -17,8 +17,8 @@ public class TextureResourceType : ResourceType
     public readonly IReadOnlyList<float>? BorderColor;
     public readonly TextureMinFilter Filtering;
     public readonly int Height;
-    public readonly PixelInternalFormat InternalFormat;
     public readonly int Width;
+    public readonly PixelInternalFormat InternalFormat;
     public readonly TextureWrapMode WrapMode;
 
     public TextureResourceType(TextureResourceTypeBuilder builder)
