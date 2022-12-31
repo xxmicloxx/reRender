@@ -35,9 +35,9 @@ public class RenderGraph
         foreach (var subgraph in Subgraphs.Values) subgraph.Invalidate();
     }
 
-    public void ExecuteSubgraph(SubgraphType stage)
+    public void ExecuteSubgraph(SubgraphType stage, float dt)
     {
         var subgraph = Subgraphs[stage];
-        subgraph.ExecutionPlan!.Execute();
+        subgraph.ExecutionPlan!.Execute(dt);
     }
 }

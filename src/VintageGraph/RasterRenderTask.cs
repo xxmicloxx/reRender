@@ -14,7 +14,7 @@ public class RasterRenderTask : RenderTask
     public ITextureTarget? DepthTarget { get; set; }
     public IList<ITextureTarget> ColorTargets { get; set; } = new List<ITextureTarget>();
 
-    public Action? RenderAction { get; set; }
+    public Action<float>? RenderAction { get; set; }
     private FrameBufferRef? FrameBuffer { get; set; }
 
     public IList<Resource> AdditionalResources { get; set; } = new List<Resource>();
@@ -26,12 +26,12 @@ public class RasterRenderTask : RenderTask
         .OfType<ResourceTextureTarget>().Select(x => x.Resource)
         .Concat(AdditionalResources);
 
-    public override void Execute()
+    public override void Execute(float dt)
     {
         var platform = (ClientPlatformWindows)ScreenManager.Platform;
 
         platform.LoadFrameBuffer(FrameBuffer);
-        RenderAction?.Invoke();
+        RenderAction?.Invoke(dt);
 
         // sampler barrier, cleans up some invalid access
         for (var i = 0; i < 16; ++i)

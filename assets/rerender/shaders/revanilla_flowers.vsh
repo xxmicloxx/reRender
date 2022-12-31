@@ -151,6 +151,8 @@ void main()
 
             colormap_calcUvs(u_colormapBase + (in_colormapDataPart << 16), truePos + vec4(u_playerPos, 0.0),
                 in_rgbaLight.a, false);
+            
+            v_alpha = 1;
 
             v_rgbaLight = in_rgbaLight;
 

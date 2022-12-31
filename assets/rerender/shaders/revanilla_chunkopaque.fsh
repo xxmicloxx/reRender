@@ -23,18 +23,18 @@ float calculateAlphaTest(vec4 texColor) {
     float aTest = texColor.a;
 
     // Lod 0 fade
-	// This makes the lod fade more noticable, actually O_O
-	if ((v_renderFlags & Lod0BitMask) != 0) {
-		
-		// We made this transition smoother, because it looks better,
-		// if you notice chunk popping, revert to the old, harsher transition
-		// Radfast and Tyron, May 28 2021 ^_^
+    // This makes the lod fade more noticable, actually O_O
+    if ((v_renderFlags & Lod0BitMask) != 0) {
+
+        // We made this transition smoother, because it looks better,
+        // if you notice chunk popping, revert to the old, harsher transition
+        // Radfast and Tyron, May 28 2021 ^_^
         // Thanks Radfast and Tyron <3 --xxmicloxx
-		float b = clamp(10 * (1.05 - length(v_msPosition.xz) / u_viewDistanceLod0) - 2.5, 0, 1);
-		//float b = clamp(20 * (1.05 - length(worldPos.xz) / viewDistanceLod0) - 5, 0, 1);
-				
-		aTest -= 1-b;
-	}
+        float b = clamp(10 * (1.05 - length(v_msPosition.xz) / u_viewDistanceLod0) - 2.5, 0, 1);
+        //float b = clamp(20 * (1.05 - length(worldPos.xz) / viewDistanceLod0) - 5, 0, 1);
+
+        aTest -= 1-b;
+    }
 
     return aTest;
 }

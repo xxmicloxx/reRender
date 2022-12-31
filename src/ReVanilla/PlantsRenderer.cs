@@ -36,7 +36,7 @@ public static class PlantsRenderer
             var p5 = Mvp[12 + l];
             for (var m = 0; m < 16; m += 4)
             {
-                Mvp[m + l] = p2 + mv[m] + p3 * mv[m + 1] + p4 * mv[m + 2] + p5 * mv[m + 3];
+                Mvp[m + l] = p2 * mv[m] + p3 * mv[m + 1] + p4 * mv[m + 2] + p5 * mv[m + 3];
             }
         }
 

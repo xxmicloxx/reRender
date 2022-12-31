@@ -11,11 +11,11 @@ vec4 warping_applyVertex(int renderFlags, vec4 msPosition) {
 		int windMode = (renderFlags >> WindModePostion) & 0xF;
 		int windData =  (renderFlags >> WindDataPosition) & 0x7;
 		
-		float x = msPosition.x + msPosition.x;
-		float z = msPosition.z + msPosition.z;
+		float x = msPosition.x + u_playerPos.x;
+		float z = msPosition.z + u_playerPos.z;
 		
 		if (windMode != 6) {
-			float y = msPosition.y + msPosition.y;
+			float y = msPosition.y + u_playerPos.y;
 			
 			// Fixes jitter due to float rounding errors
 			y = ceil(y * 10000) / 10000.0;

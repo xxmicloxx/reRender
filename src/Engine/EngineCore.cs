@@ -79,7 +79,7 @@ public class EngineCore
         frustumCuller.CalcFrustumEquations(_client.Player.Entity.Pos.AsBlockPos, pmat, mvmat);
         frustumCuller.lod0BiasSq = ClientSettings.LodBias * ClientSettings.LodBias;
         frustumCuller.lod2BiasSq = ClientSettings.LodBiasFar * ClientSettings.LodBiasFar;
-        _renderGraph.ExecuteSubgraph(SubgraphType.Main);
+        _renderGraph.ExecuteSubgraph(SubgraphType.Main, dt);
         //_client.TriggerRenderStage(EnumRenderStage.Opaque, dt);
         /*if (_client.DoTransparentRenderPass)
         {

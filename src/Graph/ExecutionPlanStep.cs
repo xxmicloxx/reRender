@@ -15,9 +15,9 @@ public class ExecutionPlanStep
     public IList<ResourceUsage> TakenResources { get; }
     public RenderTask Task { get; }
 
-    public void Execute()
+    public void Execute(float dt)
     {
-        Task.Execute();
+        Task.Execute(dt);
     }
 
     public void Allocate()

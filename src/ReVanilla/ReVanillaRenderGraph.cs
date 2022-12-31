@@ -4,8 +4,10 @@ using ReRender.Extensions;
 using ReRender.Graph;
 using ReRender.VintageGraph;
 using Vintagestory.API.Client;
+using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
 using Vintagestory.Client.NoObf;
+using Vintagestory.GameContent;
 
 namespace ReRender.ReVanilla;
 
@@ -13,6 +15,7 @@ public class VanillaRenderGraph : IDisposable
 {
     private readonly ReRenderMod _mod;
     private readonly RenderGraph _renderGraph;
+    private readonly WeatherSystemClient _weatherSystem;
 
     private ShaderProgram? _chunkOpaqueShader;
     private ShaderProgram? _chunkTopSoilShader;
@@ -30,6 +33,7 @@ public class VanillaRenderGraph : IDisposable
     {
         _mod = mod;
         _renderGraph = renderGraph;
+        _weatherSystem = mod.Api!.ModLoader.GetModSystem<WeatherSystemClient>();
 
         _renderGraph.Updating += OnRenderGraphUpdate;
         _mod.Api!.Event.ReloadShader += LoadShaders;
@@ -105,9 +109,11 @@ public class VanillaRenderGraph : IDisposable
             {
                 gBufferColor.ToTextureTarget(), gBufferNormal.ToTextureTarget(), gBufferLighting.ToTextureTarget()
             },
-            RenderAction = () =>
+            RenderAction = dt =>
             {
+                _weatherSystem.cloudRenderer.CloudTick(dt);
                 VanillaEmulation.UpdateMissingUniforms(c);
+                
                 FillGBuffers(c);
             }
         };
@@ -118,7 +124,7 @@ public class VanillaRenderGraph : IDisposable
         {
             ColorTargets = new ITextureTarget[] { lightingOutput.ToTextureTarget() },
             AdditionalResources = new Resource[] { depthBuffer, gBufferColor, gBufferNormal, gBufferLighting },
-            RenderAction = () =>
+            RenderAction = _ =>
             {
                 CalculateLighting(c, depthBuffer, gBufferColor, gBufferNormal, gBufferLighting);
             }
@@ -129,7 +135,7 @@ public class VanillaRenderGraph : IDisposable
         {
             ColorTargets = new[] { _primaryTextureTarget! },
             AdditionalResources = new Resource[] { lightingOutput },
-            RenderAction = () =>
+            RenderAction = _ =>
             {
                 c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
                 var s = _tonemapShader!;
@@ -156,10 +162,10 @@ public class VanillaRenderGraph : IDisposable
         using (s.Bind())
         {
             c.BindKnownUniforms(s);
-            s.BindTexture2D("t_depth", depthBuffer.Instance!.TextureId);
-            s.BindTexture2D("t_color", gBufferColor.Instance!.TextureId);
-            s.BindTexture2D("t_normal", gBufferNormal.Instance!.TextureId);
-            s.BindTexture2D("t_lighting", gBufferLighting.Instance!.TextureId);
+            s.BindTexture2D("t_depth", depthBuffer.Instance!.TextureId, 0);
+            s.BindTexture2D("t_color", gBufferColor.Instance!.TextureId, 1);
+            s.BindTexture2D("t_normal", gBufferNormal.Instance!.TextureId, 2);
+            s.BindTexture2D("t_lighting", gBufferLighting.Instance!.TextureId, 3);
             _mod.RenderEngine!.DrawFullscreenPass();
         }
     }

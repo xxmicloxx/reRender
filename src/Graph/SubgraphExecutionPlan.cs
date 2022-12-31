@@ -25,11 +25,11 @@ public class SubgraphExecutionPlan : IDisposable
         DeallocateResources();
     }
 
-    public void Execute()
+    public void Execute(float dt)
     {
         if (_resourceAllocations == null) throw new InvalidOperationException("Not allocated");
 
-        foreach (var step in _steps) step.Execute();
+        foreach (var step in _steps) step.Execute(dt);
     }
 
     public void AllocateResources()
