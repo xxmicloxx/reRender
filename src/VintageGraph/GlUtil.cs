@@ -164,4 +164,41 @@ public static class GlUtil
                 throw new ArgumentOutOfRangeException(nameof(internalFormat), internalFormat, null);
         }
     }
+
+    public static int GetBytesPerPixel(this PixelInternalFormat intFormat)
+    {
+        var format = intFormat.GetPixelFormat();
+        var type = intFormat.GetPixelType();
+
+        var components = format switch
+        {
+            PixelFormat.Red => 1,
+            PixelFormat.Rgb => 3,
+            PixelFormat.Rgba => 4,
+            PixelFormat.Rg => 2,
+            PixelFormat.RgInteger => 2,
+            PixelFormat.DepthStencil => 1,
+            PixelFormat.DepthComponent => 1,
+            PixelFormat.RedInteger => 1,
+            PixelFormat.RgbInteger => 3,
+            PixelFormat.RgbaInteger => 4,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        var componentSize = type switch
+        {
+            PixelType.Byte => 1,
+            PixelType.UnsignedByte => 1,
+            PixelType.Short => 2,
+            PixelType.UnsignedShort => 2,
+            PixelType.Int => 4,
+            PixelType.UnsignedInt => 4,
+            PixelType.Float => 4,
+            PixelType.HalfFloat => 2,
+            PixelType.UnsignedInt248 => 4,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        return components * componentSize;
+    }
 }

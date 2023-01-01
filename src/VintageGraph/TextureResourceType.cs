@@ -7,7 +7,7 @@ namespace ReRender.VintageGraph;
 
 public class TextureResource : Resource<TextureResourceType, TextureResourceInstance>
 {
-    public TextureResource(TextureResourceType resourceType) : base(resourceType)
+    public TextureResource(TextureResourceType resourceType, string? name = null) : base(resourceType, name)
     {
     }
 }
@@ -36,9 +36,9 @@ public class TextureResourceType : ResourceType
     {
     }
 
-    public Resource CreateBaseResource()
+    public Resource CreateBaseResource(string? name = null)
     {
-        return new TextureResource(this);
+        return CreateResource(name);
     }
 
     public ResourceInstance CreateResourceInstance()
@@ -46,9 +46,14 @@ public class TextureResourceType : ResourceType
         return new TextureResourceInstance(this);
     }
 
-    public TextureResource CreateResource()
+    public long? GetGpuSize()
     {
-        return new TextureResource(this);
+        return (long)InternalFormat.GetBytesPerPixel() * Width * Height;
+    }
+
+    public TextureResource CreateResource(string? name = null)
+    {
+        return new TextureResource(this, name);
     }
 
     protected bool Equals(TextureResourceType other)
@@ -77,6 +82,11 @@ public class TextureResourceType : ResourceType
             hashCode = (hashCode * 397) ^ (BorderColor != null ? BorderColor.GetHashCode() : 0);
             return hashCode;
         }
+    }
+
+    public override string ToString()
+    {
+        return $"{InternalFormat}, {Width}x{Height}, Filtering: {Filtering}, WrapMode: {WrapMode}";
     }
 }
 

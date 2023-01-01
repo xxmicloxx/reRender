@@ -23,7 +23,7 @@ void main(void)
 {
     vec3 color = texture(t_scene, v_texCoord).rgb;
     
-    const float exposure = -1.4;
+    const float exposure = 0;
     color *= pow(2, exposure);
     
     vec3 tonemapped = tonemap_filmic(color);

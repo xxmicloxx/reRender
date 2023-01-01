@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using ReRender.Engine;
 using ReRender.Graph;
+using ReRender.Gui;
 using ReRender.ReVanilla;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -37,6 +38,12 @@ public class ReRenderMod : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         PatchGame();
+
+        api.RegisterCommand("rerender", "Opens the reRender configuration dialog", "", (_, _) =>
+        {
+            var dialog = new SubgraphSelectionDialog(this);
+            dialog.TryOpen();
+        });
 
         // recreate all buffers
         ScreenManager.Platform.RebuildFrameBuffers();

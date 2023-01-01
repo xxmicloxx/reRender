@@ -165,13 +165,14 @@ public class VanillaRenderGraph : IDisposable
     {
         target.Tasks.Clear();
         
-        var depthBuffer = _depthBufferTextureType!.CreateResource();
-        var gBufferColor = _colorBufferTextureType!.CreateResource();
-        var gBufferNormal = _gBufferTextureType!.CreateResource();
-        var gBufferLighting = _colorBufferTextureType!.CreateResource();
+        var depthBuffer = _depthBufferTextureType!.CreateResource("Depth Buffer");
+        var gBufferColor = _colorBufferTextureType!.CreateResource("Color Buffer");
+        var gBufferNormal = _gBufferTextureType!.CreateResource("Normal Buffer");
+        var gBufferLighting = _colorBufferTextureType!.CreateResource("Lighting Buffer");
 
         var deferred = new RasterRenderTask
         {
+            Name = "Fill GBuffers",
             DepthTarget = depthBuffer.ToTextureTarget(),
             ColorTargets = new ITextureTarget[]
             {
@@ -187,9 +188,10 @@ public class VanillaRenderGraph : IDisposable
         };
         target.Tasks.Add(deferred);
 
-        var occlusionBuffer = _ssaoTextureType!.CreateResource();
+        var occlusionBuffer = _ssaoTextureType!.CreateResource("Occlusion Buffer");
         var occlusionTask = new RasterRenderTask
         {
+            Name = "Calculate Occlusion (SSAO)",
             ColorTargets = new ITextureTarget[] { occlusionBuffer.ToTextureTarget() },
             AdditionalResources = new Resource[] { depthBuffer, gBufferNormal },
             RenderAction = _ =>
@@ -202,12 +204,12 @@ public class VanillaRenderGraph : IDisposable
         var ssaoSource = occlusionBuffer;
         for (var i = 0; i < 1; ++i)
         {
-            var blurHorTarget = _ssaoTextureType.CreateResource();
+            var blurHorTarget = _ssaoTextureType.CreateResource("Blur Buffer Horizontal");
             var blurHorTask =
                 CreateBilateralBlurTask(c, blurHorTarget.ToTextureTarget(), ssaoSource, depthBuffer, false);
             target.Tasks.Add(blurHorTask);
 
-            var blurVerTarget = _ssaoTextureType.CreateResource();
+            var blurVerTarget = _ssaoTextureType.CreateResource("Blur Buffer Vertical");
             var blurVerTask =
                 CreateBilateralBlurTask(c, blurVerTarget.ToTextureTarget(), blurHorTarget, depthBuffer, true);
             target.Tasks.Add(blurVerTask);
@@ -215,9 +217,10 @@ public class VanillaRenderGraph : IDisposable
             ssaoSource = blurVerTarget;
         }
 
-        var lightingOutput = _gBufferTextureType!.CreateResource();
+        var lightingOutput = _gBufferTextureType!.CreateResource("Lighting Output Buffer");
         var lighting = new RasterRenderTask
         {
+            Name = "Light scene",
             ColorTargets = new ITextureTarget[] { lightingOutput.ToTextureTarget() },
             AdditionalResources = new Resource[]
                 { depthBuffer, gBufferColor, gBufferNormal, gBufferLighting, ssaoSource },
@@ -230,6 +233,7 @@ public class VanillaRenderGraph : IDisposable
 
         var output = new RasterRenderTask
         {
+            Name = "Tonemap",
             ColorTargets = new[] { _primaryTextureTarget! },
             AdditionalResources = new Resource[] { lightingOutput },
             RenderAction = _ =>
@@ -246,13 +250,18 @@ public class VanillaRenderGraph : IDisposable
             }
         };
         target.Tasks.Add(output);
+        
+        //target.Tasks.Add(CreateBlitTask(c, _primaryTextureTarget!, gBufferNormal));
     }
 
     private RenderTask CreateBilateralBlurTask(UpdateContext c, ITextureTarget target, TextureResource source,
         TextureResource depth, bool vertical)
     {
+        var orientationStr = vertical ? "Vertical" : "Horizontal";
+        
         return new RasterRenderTask
         {
+            Name = $"Bilateral Blur ({orientationStr})",
             ColorTargets = new [] { target },
             AdditionalResources = new Resource[] { source, depth },
             RenderAction = _ =>
@@ -276,6 +285,7 @@ public class VanillaRenderGraph : IDisposable
     {
         return new RasterRenderTask
         {
+            Name = "Blit",
             ColorTargets = new[] { target },
             AdditionalResources = new Resource[] { source },
             RenderAction = _ =>

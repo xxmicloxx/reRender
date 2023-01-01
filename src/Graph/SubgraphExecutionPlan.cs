@@ -6,7 +6,7 @@ namespace ReRender.Graph;
 
 public class SubgraphExecutionPlan : IDisposable
 {
-    private readonly IEnumerable<ResourceAllocation> _resourceAllocations;
+    public IEnumerable<ResourceAllocation> ResourceAllocations { get; }
     private readonly IEnumerable<ResourceUsage> _resources;
 
     private readonly IReadOnlyList<ExecutionPlanStep> _steps;
@@ -17,7 +17,7 @@ public class SubgraphExecutionPlan : IDisposable
     {
         _steps = steps;
         _resources = resources;
-        _resourceAllocations = allocations;
+        ResourceAllocations = allocations;
     }
 
     public void Dispose()
@@ -27,7 +27,7 @@ public class SubgraphExecutionPlan : IDisposable
 
     public void Execute(float dt)
     {
-        if (_resourceAllocations == null) throw new InvalidOperationException("Not allocated");
+        if (ResourceAllocations == null) throw new InvalidOperationException("Not allocated");
 
         foreach (var step in _steps) step.Execute(dt);
     }
@@ -37,7 +37,7 @@ public class SubgraphExecutionPlan : IDisposable
         DeallocateResources();
 
         var instances = new HashSet<ResourceInstance>();
-        foreach (var alloc in _resourceAllocations) instances.Add(alloc.Allocate());
+        foreach (var alloc in ResourceAllocations) instances.Add(alloc.Allocate());
 
         var resources = _resources.Select(x => x.Resource).ToArray();
         _currentAllocation = new SubgraphResourcesAllocation(resources, instances);
