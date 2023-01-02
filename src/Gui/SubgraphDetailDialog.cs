@@ -36,7 +36,7 @@ public class SubgraphDetailDialog : GuiDialog
 
         var tabBounds = ElementBounds.Fixed(-100, GuiStyle.TitleBarHeight + 5, 100, 200);
 
-        var composer = capi.Gui.CreateCompo("reRender_subgraphSelection", dialogBounds)
+        var composer = capi.Gui.CreateCompo("reRender_detailSelection", dialogBounds)
             .AddShadedDialogBG(bgBounds)
             .AddDialogTitleBar($"reRender [{_type.ToString()}]", OnTitleBarCloseClicked)
             .AddVerticalTabs(new GuiTab[]

@@ -1,11 +1,15 @@
-﻿using HarmonyLib;
+﻿using System;
+using HarmonyLib;
+using OpenTK.Graphics.OpenGL;
 using ReRender.Engine;
 using ReRender.Graph;
 using ReRender.Gui;
 using ReRender.ReVanilla;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Util;
 using Vintagestory.Client;
+using Vintagestory.Client.NoObf;
 
 namespace ReRender;
 
@@ -37,6 +41,9 @@ public class ReRenderMod : ModSystem
 
     public override void StartClientSide(ICoreClientAPI api)
     {
+        if (!CheckPlatform()) return;
+        if (!CheckGlVersion()) return;
+        
         PatchGame();
 
         api.RegisterCommand("rerender", "Opens the reRender configuration dialog", "", (_, _) =>
@@ -47,6 +54,38 @@ public class ReRenderMod : ModSystem
 
         // recreate all buffers
         ScreenManager.Platform.RebuildFrameBuffers();
+    }
+
+    private bool CheckPlatform()
+    {
+        var os = Environment.OSVersion;
+        if (os.Platform != PlatformID.MacOSX) return true;
+
+        var dialog = new UnsupportedPlatformDialog(Api!);
+        Api!.Event.LevelFinalize += () =>
+        {
+            dialog.TryOpen();
+        };
+        
+        return false;
+    }
+    
+    private bool CheckGlVersion()
+    {
+        var major = GL.GetInteger(GetPName.MajorVersion);
+        var minor = GL.GetInteger(GetPName.MinorVersion);
+
+        if (major > 4 || (major == 4 && minor >= 3)) return true;
+
+        ClientSettings.GlContextVersion = "4.3";
+        
+        var dialog = new RestartRequiredDialog(Api!);
+        Api!.Event.LevelFinalize += () =>
+        {
+            dialog.TryOpen();
+        };
+
+        return false;
     }
 
     private void PatchGame()
