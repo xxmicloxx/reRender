@@ -1,5 +1,6 @@
 ﻿using Vintagestory.API.Client;
 using Vintagestory.Client;
+using Vintagestory.Client.NoObf;
 
 namespace ReRender.Gui;
 
@@ -23,13 +24,13 @@ public class SubgraphSelectionDialog : GuiDialog
         var bgBounds = ElementStdBounds.DialogBackground();
 
         const int height = 25;
-        const int padding = 10;
+        const int padding = 5;
         var titleFont = CairoFont.WhiteSmallishText();
         var font = CairoFont.WhiteSmallText();
         var titleBounds = ElementBounds.Fixed(0, GuiStyle.TitleBarHeight, 300, height);
-        var textBounds = ElementBounds.Fixed(0, GuiStyle.TitleBarHeight + height + padding + 3, 125, height);
-        var exportButtonBounds = ElementBounds.Fixed(135, GuiStyle.TitleBarHeight + height + padding, 80, height);
-        var detailButtonBounds = ElementBounds.Fixed(220, GuiStyle.TitleBarHeight + height + padding, 80, height);
+        var textBounds = ElementBounds.Fixed(0, GuiStyle.TitleBarHeight + height + 10 + 3, 125, height);
+        var exportButtonBounds = ElementBounds.Fixed(135, GuiStyle.TitleBarHeight + height + 10, 80, height);
+        var detailButtonBounds = ElementBounds.Fixed(220, GuiStyle.TitleBarHeight + height + 10, 80, height);
 
         var composer = capi.Gui.CreateCompo("reRender_subgraphSelection", dialogBounds)
             .AddShadedDialogBG(bgBounds)
@@ -43,7 +44,7 @@ public class SubgraphSelectionDialog : GuiDialog
             var subgraph = entry.Value;
 
             composer.AddStaticText(type.ToString(), font, textBounds);
-            
+
             composer.AddSmallButton("Export", () =>
             {
                 GraphvizExporter.ExportToClipboard(subgraph, _mod);
@@ -65,7 +66,18 @@ public class SubgraphSelectionDialog : GuiDialog
             exportButtonBounds = exportButtonBounds.BelowCopy(fixedDeltaY: padding);
         }
 
+        var reloadButtonBounds = ElementBounds.Fixed(0, detailButtonBounds.fixedY + 5, 300, 40);
+        composer.AddButton("Reload all", OnReloadClicked, reloadButtonBounds, CairoFont.WhiteSmallishText());
+
         SingleComposer = composer.EndChildElements().Compose();
+    }
+
+    private bool OnReloadClicked()
+    {
+        // recreate all buffers
+        ScreenManager.Platform.RebuildFrameBuffers();
+        _mod.Api!.ShowChatMessage("Reloading all frame buffers and render graphs succeeded.");
+        return true;
     }
 
     private void OnTitleBarCloseClicked()

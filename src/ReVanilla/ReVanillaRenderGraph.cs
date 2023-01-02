@@ -250,8 +250,6 @@ public class VanillaRenderGraph : IDisposable
             }
         };
         target.Tasks.Add(output);
-        
-        //target.Tasks.Add(CreateBlitTask(c, _primaryTextureTarget!, gBufferNormal));
     }
 
     private RenderTask CreateBilateralBlurTask(UpdateContext c, ITextureTarget target, TextureResource source,
@@ -281,26 +279,6 @@ public class VanillaRenderGraph : IDisposable
         };
     }
 
-    private RenderTask CreateBlitTask(UpdateContext c, ITextureTarget target, TextureResource source)
-    {
-        return new RasterRenderTask
-        {
-            Name = "Blit",
-            ColorTargets = new[] { target },
-            AdditionalResources = new Resource[] { source },
-            RenderAction = _ =>
-            {
-                c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
-                var s = ShaderPrograms.Blit;
-                using (s.Bind())
-                {
-                    s.Scene2D = source.Instance!.TextureId;
-                    _mod.RenderEngine!.DrawFullscreenPass();
-                }
-            }
-        };
-    }
-    
     private void CalculateOcclusion(UpdateContext c, TextureResource depthBuffer, TextureResource gBufferNormal)
     {
         GL.ClearBuffer(ClearBuffer.Color, 0, new[] { 1f, 1f, 1f, 1f });

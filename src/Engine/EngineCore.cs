@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL;
 using ReRender.Graph;
+using ReRender.VintageGraph;
 using ReRender.Wrapper;
 using Vintagestory.API.Client;
 using Vintagestory.Client;
@@ -134,5 +135,11 @@ public class EngineCore
         _renderGraph.Invalidate();
         _renderGraph.Update(framebuffers, _client);
         _renderGraph.Reallocate();
+    }
+
+    public UpdateContext CreateUpdateContext()
+    {
+        var fbs = ScreenManager.Platform.FrameBuffers;
+        return new UpdateContext(fbs, _client);
     }
 }

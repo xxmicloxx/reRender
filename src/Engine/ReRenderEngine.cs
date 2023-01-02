@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using ReRender.Extensions;
 using ReRender.Graph;
+using ReRender.VintageGraph;
 using Vintagestory.API.Client;
 using Vintagestory.Client;
 using Vintagestory.Client.NoObf;
@@ -41,5 +43,30 @@ public class ReRenderEngine
     {
         var platform = (ClientPlatformWindows)ScreenManager.Platform;
         platform.RenderFullscreenTriangle(_screenQuad);
+    }
+    
+    public RenderTask CreateBlitTask(UpdateContext c, ITextureTarget target, TextureResource source)
+    {
+        return new RasterRenderTask
+        {
+            Name = "Blit",
+            ColorTargets = new[] { target },
+            AdditionalResources = new Resource[] { source },
+            RenderAction = _ =>
+            {
+                c.SetupDraw(BlendMode.Disabled, DepthMode.Disabled, CullMode.Disabled);
+                var s = ShaderPrograms.Blit;
+                using (s.Bind())
+                {
+                    s.Scene2D = source.Instance!.TextureId;
+                    _mod.RenderEngine!.DrawFullscreenPass();
+                }
+            }
+        };
+    }
+
+    public UpdateContext CreateUpdateContext()
+    {
+        return _core.CreateUpdateContext();
     }
 }

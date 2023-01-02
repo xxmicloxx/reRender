@@ -143,6 +143,7 @@
         <Compile Include="src\Gui\ResourcesView.cs" />
         <Compile Include="src\Gui\SubgraphDetailDialog.cs" />
         <Compile Include="src\Gui\SubgraphSelectionDialog.cs" />
+        <Compile Include="src\Gui\TexturesView.cs" />
         <Compile Include="src\HarmonyPatches.cs" />
         <Compile Include="src\Graph\RenderGraph.cs" />
         <Compile Include="src\ReRenderMod.cs" />

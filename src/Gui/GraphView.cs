@@ -1,6 +1,4 @@
-﻿using System.Threading;
-using System.Windows.Forms;
-using ReRender.Graph;
+﻿using ReRender.Graph;
 using Vintagestory.API.Client;
 
 namespace ReRender.Gui;
