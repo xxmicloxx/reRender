@@ -24,7 +24,7 @@ public class UnsupportedPlatformDialog : GuiDialog
             .AddShadedDialogBG(bgBounds, false)
             .BeginChildElements(bgBounds)
             .AddStaticText("Unsupported Platform", titleFont, titleTextBounds)
-            .AddStaticText("macOS is not supported by reRender. The mod has not been enabled.",
+            .AddStaticText("macOS is not supported by reRender. The mod has not been loaded.",
                 CairoFont.WhiteSmallText(), bodyTextBounds)
             .AddButton("Close", OnOkPressed, okBounds, CairoFont.WhiteSmallishText())
             .EndChildElements()

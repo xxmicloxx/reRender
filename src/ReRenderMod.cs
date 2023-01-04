@@ -45,6 +45,7 @@ public class ReRenderMod : ModSystem
         if (!CheckGlVersion()) return;
         
         PatchGame();
+        RenderEngine?.Init();
 
         api.RegisterCommand("rerender", "Opens the reRender configuration dialog", "", (_, _) =>
         {

@@ -113,6 +113,7 @@
         <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_ssao.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_ssao.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_test.csh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.vsh" />
         <Content Include="design\Notes.md" />
@@ -121,6 +122,8 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="src\Engine\CommonUniforms.cs" />
+        <Compile Include="src\Engine\ComputeInfo.cs" />
+        <Compile Include="src\Engine\ComputeShaderProgram.cs" />
         <Compile Include="src\Engine\EngineCore.cs" />
         <Compile Include="src\Engine\ReRenderEngine.cs" />
         <Compile Include="src\Extensions\EntityShapeRenderers.cs" />
@@ -154,6 +157,7 @@
         <Compile Include="src\ReVanilla\PlantsRenderer.cs" />
         <Compile Include="src\ReVanilla\ReVanillaRenderGraph.cs" />
         <Compile Include="src\ReVanilla\VanillaEmulation.cs" />
+        <Compile Include="src\VintageGraph\ComputeRenderTask.cs" />
         <Compile Include="src\VintageGraph\ExternalTextureTarget.cs" />
         <Compile Include="src\VintageGraph\ITextureTarget.cs" />
         <Compile Include="src\VintageGraph\ResourceTextureTarget.cs" />

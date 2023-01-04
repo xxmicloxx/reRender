@@ -15,12 +15,18 @@ public class ReRenderEngine
     private MeshRef? _screenQuad;
 
     public CommonUniforms Uniforms { get; }
+    public ComputeInfo? ComputeInfo { get; private set; }
 
     public ReRenderEngine(ReRenderMod mod, RenderGraph renderGraph)
     {
         _mod = mod;
         Uniforms = new CommonUniforms(mod);
         _core = new EngineCore(renderGraph, Uniforms);
+    }
+
+    public void Init()
+    {
+        ComputeInfo = new ComputeInfo();
     }
 
     public void AfterFramebufferInit(List<FrameBufferRef> framebuffers, MeshRef screenQuad)
