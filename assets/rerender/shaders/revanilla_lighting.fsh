@@ -23,7 +23,7 @@ uniform vec3 u_lightDirection;
 
 float lighting_calculateSunlightAmount(vec3 wsPosition, vec3 wsNormal, float sunlightLevel) {
     float nDotL = max(0.0, dot(wsNormal, u_lightDirection));
-    float sunlight = 6.0 * nDotL * sunlightLevel;
+    float sunlight = 8.0 * nDotL * sunlightLevel;
     
     if (sunlight == 0.0) {
         return 0.0;
@@ -40,11 +40,11 @@ vec3 lighting_calculateInfluence(vec3 wsPosition, vec3 wsNormal, vec4 lighting, 
     vec3 skylightColor = vec3(0.6, 0.8, 1.0);
     vec3 sunlightColor = vec3(1.0, 0.95, 0.7);
 
-    vec3 ambient = vec3(0.02) * occlusion;
+    vec3 ambient = vec3(0.005) * occlusion;
     vec3 skylightAmbient = skylightColor * sunlightLevel * 1.5 * occlusion;
     vec3 skylightTop = max(0.0, dot(wsNormal, vec3(0, 1, 0))) * skylightColor * sunlightLevel * 0.5 * occlusion;
     vec3 sunlight = lighting_calculateSunlightAmount(wsPosition, wsNormal, sunlightLevel) * sunlightColor;
-    vec3 blocklight = colorspace_toLinear(lighting.rgb);
+    vec3 blocklight = lighting.rgb * 0.5;
 
     return ambient + skylightAmbient + skylightTop + sunlight + blocklight;
 }

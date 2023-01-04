@@ -35,7 +35,6 @@ public static class ClientPlatformWindowsPatches
     [HarmonyPrefix]
     private static bool RenderPostprocessingEffectsPrefix(ClientPlatformWindows __instance, MeshRef ___screenQuad)
     {
-        // TODO postprocessing
         GL.Enable(EnableCap.Blend);
         return false;
     }
@@ -44,7 +43,6 @@ public static class ClientPlatformWindowsPatches
     [HarmonyPrefix]
     private static bool RenderFinalCompositionPrefix(ClientPlatformWindows __instance, MeshRef ___screenQuad)
     {
-        // TODO finalize, for now: a whole lot of nothing
         return false;
     }
 

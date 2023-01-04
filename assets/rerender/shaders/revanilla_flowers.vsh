@@ -43,6 +43,7 @@ out vec4 v_rgbaLight;
 #include revanilla_noise.ash
 #include revanilla_warping.vsh
 #include revanilla_colormap.vsh
+#include revanilla_colorspace.ash
 
 mat4 rotation( in float angle )
 {
@@ -154,7 +155,7 @@ void main()
             
             v_alpha = 1;
 
-            v_rgbaLight = in_rgbaLight;
+            v_rgbaLight = colorspace_toLinear(in_rgbaLight);
 
             vec4 vsNormal = u_modelView * vec4(normal.xyz, 0.0);
             v_vsNormal = vsNormal.xyz;

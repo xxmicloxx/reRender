@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics.OpenGL;
+using ReRender.VintageGraph;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
@@ -160,6 +161,12 @@ public class ComputeShaderProgram : IDisposable
         EnsureActive();
         GL.Uniform1(_uniformLocations[imageName], imgNum);
         GL.BindImageTexture(imgNum, texId, 0, false, 0, access, format);
+    }
+
+    public void BindBuffer(int num, SSBO buffer)
+    {
+        EnsureActive();
+        GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, num, buffer.Id);
     }
 
     public void Use()

@@ -5,6 +5,8 @@
   "authors": [
     "xxmicloxx"
   ],
+  "side": "Client",
+  "requiredOnServer": false,
   "description": "Custom HDR-based rendering engine for Vintage Story",
   "version": "1.0.0",
   "dependencies": {

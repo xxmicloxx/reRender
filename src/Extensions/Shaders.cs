@@ -1,4 +1,6 @@
 ﻿using System;
+using OpenTK.Graphics.OpenGL;
+using ReRender.Engine;
 using ReRender.VintageGraph;
 using Vintagestory.API.Client;
 using Vintagestory.Client;
@@ -19,6 +21,25 @@ public static class Shaders
         if (!shader.Compile()) success = false;
         mod.Api.Render.CheckGlError("rerender-shader");
         return shader;
+    }
+
+    public static ComputeShaderProgram RegisterComputeShader(this ReRenderMod mod, string name, ref bool success)
+    {
+        mod.Api!.Render.CheckGlError("rerender-shader-pre");
+        var shader = new ComputeShaderProgram
+        {
+            AssetDomain = mod.Mod.Info.ModID,
+            PassName = name
+        };
+        if (!shader.LoadFromFile()) success = false;
+        if (!shader.Compile()) success = false;
+        mod.Api.Render.CheckGlError("rerender-shader");
+        return shader;
+    }
+
+    public static void BindBuffer(this ShaderProgram _, int num, SSBO ssbo)
+    {
+        GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, num, ssbo.Id);
     }
 
     public static IDisposable Bind(this IShaderProgram shader)

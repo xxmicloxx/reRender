@@ -92,8 +92,6 @@ public class TextureResourceType : ResourceType
 
 public class TextureResourceTypeBuilder
 {
-    // TODO border clamp value
-
     public TextureResourceTypeBuilder()
     {
     }

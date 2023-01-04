@@ -22,6 +22,7 @@ uniform vec3 u_playerPos;
 #include revanilla_noise.ash
 #include revanilla_warping.vsh
 #include revanilla_colormap.vsh
+#include revanilla_colorspace.ash
 
 void main(void) {
     bool isLeaves = ((i_renderFlags & WindModeBitMask) > 0); 
@@ -41,7 +42,7 @@ void main(void) {
     v_vsNormal = vsNormal.xyz;
     v_msPosition = msPosition.xyz;
     v_uv = i_uv;
-    v_rgbaLight = i_rgbaLight;
+    v_rgbaLight = colorspace_toLinear(i_rgbaLight);
     v_renderFlags = i_renderFlags;
 
     // To fix Z-Fighting on blocks over certain other blocks. 

@@ -22,6 +22,7 @@ uniform vec3 u_playerPos;
 #include vertexflagbits.ash
 #include revanilla_noise.ash
 #include revanilla_colormap.vsh
+#include revanilla_colorspace.ash
 
 void main(void) {
     vec4 msPosition = vec4(i_vertexPosition + u_origin, 1.0);
@@ -37,5 +38,5 @@ void main(void) {
     v_vsNormal = vsNormal.xyz;
     v_uv = i_uv;
     v_uv2 = i_uv2;
-    v_rgbaLight = i_rgbaLight;
+    v_rgbaLight = colorspace_toLinear(i_rgbaLight);
 }

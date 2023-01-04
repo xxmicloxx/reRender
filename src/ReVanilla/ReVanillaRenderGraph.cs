@@ -1,5 +1,6 @@
 ﻿using System;
 using OpenTK.Graphics.OpenGL;
+using ReRender.Engine;
 using ReRender.Extensions;
 using ReRender.Graph;
 using ReRender.VintageGraph;
@@ -23,12 +24,16 @@ public class VanillaRenderGraph : IDisposable
     private ShaderProgram? _lightingShader;
     private ShaderProgram? _ssaoShader;
     private ShaderProgram? _bilateralBlurShader;
+    private ComputeShaderProgram? _luminanceHistogramShader;
+    private ComputeShaderProgram? _histogramAverageShader;
 
     private TextureResourceType? _colorBufferTextureType;
     private TextureResourceType? _depthBufferTextureType;
     private TextureResourceType? _gBufferTextureType;
     private TextureResourceType? _ssaoTextureType;
 
+    private readonly SSBO _histogramSSBO;
+    private readonly SSBO _histogramAverageSSBO;
     private readonly int _ssaoNoiseTexture;
     private readonly float[] _ssaoKernel = new float[192];
     
@@ -46,8 +51,24 @@ public class VanillaRenderGraph : IDisposable
         _ssaoNoiseTexture = GL.GenTexture();
         InitSsao();
         
+        _histogramSSBO = new SSBO();
+        _histogramAverageSSBO = new SSBO();
+        InitHistogram();
+
         _renderGraph.Updating += OnRenderGraphUpdate;
         _mod.Api!.Event.ReloadShader += LoadShaders;
+    }
+
+    private void InitHistogram()
+    {
+        var clearVal = 0u;
+        _histogramSSBO.ReserveAndClear(1024, PixelInternalFormat.R32ui, PixelFormat.RedInteger, PixelType.UnsignedInt,
+            ref clearVal, BufferUsageHint.StreamCopy);
+        
+        // single float, read every frame
+        var initialAverage = 0f;
+        _histogramAverageSSBO.ReserveAndClear(4, PixelInternalFormat.R32f, PixelFormat.Red, PixelType.Float,
+            ref initialAverage, BufferUsageHint.StreamRead);
     }
 
     private void InitSsao()
@@ -97,7 +118,11 @@ public class VanillaRenderGraph : IDisposable
     {
         _mod.Api!.Event.ReloadShader -= LoadShaders;
         
+        GL.MemoryBarrier(MemoryBarrierFlags.AllBarrierBits);
+        
         GL.DeleteTexture(_ssaoNoiseTexture);
+        _histogramSSBO.Dispose();
+        _histogramAverageSSBO.Dispose();
         
         _chunkRenderer.Dispose();
         _entityRenderer.Dispose();
@@ -106,6 +131,8 @@ public class VanillaRenderGraph : IDisposable
         _lightingShader?.Dispose();
         _ssaoShader?.Dispose();
         _bilateralBlurShader?.Dispose();
+        _luminanceHistogramShader?.Dispose();
+        _histogramAverageShader?.Dispose();
 
         _renderGraph.Updating -= OnRenderGraphUpdate;
     }
@@ -121,11 +148,15 @@ public class VanillaRenderGraph : IDisposable
         _lightingShader?.Dispose();
         _ssaoShader?.Dispose();
         _bilateralBlurShader?.Dispose();
+        _luminanceHistogramShader?.Dispose();
+        _histogramAverageShader?.Dispose();
 
         _tonemapShader = _mod.RegisterShader("revanilla_tonemap", ref success);
         _lightingShader = _mod.RegisterShader("revanilla_lighting", ref success);
         _ssaoShader = _mod.RegisterShader("revanilla_ssao", ref success);
         _bilateralBlurShader = _mod.RegisterShader("revanilla_bilateralblur", ref success);
+        _luminanceHistogramShader = _mod.RegisterComputeShader("revanilla_luminanceHistogram", ref success);
+        _histogramAverageShader = _mod.RegisterComputeShader("revanilla_histogramAverage", ref success);
 
         return success;
     }
@@ -188,6 +219,29 @@ public class VanillaRenderGraph : IDisposable
         };
         target.Tasks.Add(deferred);
 
+        var histogramAverage = new ComputeRenderTask
+        {
+            Name = "Average Histogram",
+            RenderAction = dt =>
+            {
+                var s = _histogramAverageShader!;
+                using (s.Bind())
+                {
+                    s.BindBuffer(0, _histogramSSBO);
+                    s.BindBuffer(1, _histogramAverageSSBO);
+                    s.Uniform("u_minLogLum", -12.0f);
+                    s.Uniform("u_logLumRange", 14.0f);
+                    s.Uniform("u_numPixels", _gBufferTextureType.Width * _gBufferTextureType.Height);
+                    s.Uniform("u_timeCoeff", dt);
+                    
+                    // make sure all writes are finished
+                    GL.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit);
+                    GL.DispatchCompute(1, 1, 1);
+                }
+            }
+        };
+        target.Tasks.Add(histogramAverage);
+        
         var occlusionBuffer = _ssaoTextureType!.CreateResource("Occlusion Buffer");
         var occlusionTask = new RasterRenderTask
         {
@@ -243,13 +297,34 @@ public class VanillaRenderGraph : IDisposable
                 using (s.Bind())
                 {
                     s.BindTexture2D("t_scene", lightingOutput.Instance!.TextureId);
+                    s.BindBuffer(0, _histogramAverageSSBO);
+                    
+                    // ensure our histogram value is recent
+                    GL.MemoryBarrier(MemoryBarrierFlags.ShaderStorageBarrierBit);
                     _mod.RenderEngine!.DrawFullscreenPass();
                 }
-                
-                GL.BindSampler(0, 0);
             }
         };
         target.Tasks.Add(output);
+        
+        var histogram = new ComputeRenderTask
+        {
+            Name = "Gather Luminance Histogram",
+            AdditionalResources = new Resource[] { lightingOutput },
+            RenderAction = _ =>
+            {
+                var s = _luminanceHistogramShader!;
+                using (s.Bind())
+                {
+                    s.BindImage2D("t_lighting", lightingOutput.Instance!.TextureId, 0, TextureAccess.ReadOnly, SizedInternalFormat.Rgba32f);
+                    s.BindBuffer(0, _histogramSSBO);
+                    s.Uniform("u_minLogLum", -12.0f);
+                    s.Uniform("u_inverseLogLumRange", 1/14.0f);
+                    ComputeUtil.DispatchCompute(lightingOutput.ResourceType, 16, 16);
+                }
+            }
+        };
+        target.Tasks.Add(histogram);
     }
 
     private RenderTask CreateBilateralBlurTask(UpdateContext c, ITextureTarget target, TextureResource source,

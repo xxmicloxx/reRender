@@ -40,5 +40,5 @@ void main(void) {
     
     o_color = vec4(texColor.rgb, 1.0);
     o_normal = vec4(v_vsNormal, gbflags_pack(gbflags));
-    o_lighting = u_rgbaLight;
+    o_lighting = colorspace_toLinear(u_rgbaLight);
 }

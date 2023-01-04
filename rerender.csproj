@@ -105,6 +105,7 @@
         <Content Include="assets\rerender\shaders\revanilla_entityanimated.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_flowers.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_flowers.vsh" />
+        <Content Include="assets\rerender\shaders\revanilla_histogramAverage.csh" />
         <Content Include="assets\rerender\shaders\revanilla_lighting.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_lighting.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_chunkopaque.fsh" />
@@ -113,7 +114,7 @@
         <Content Include="assets\rerender\shaders\revanilla_chunktopsoil.vsh" />
         <Content Include="assets\rerender\shaders\revanilla_ssao.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_ssao.vsh" />
-        <Content Include="assets\rerender\shaders\revanilla_test.csh" />
+        <Content Include="assets\rerender\shaders\revanilla_luminanceHistogram.csh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.fsh" />
         <Content Include="assets\rerender\shaders\revanilla_tonemap.vsh" />
         <Content Include="design\Notes.md" />
@@ -151,6 +152,7 @@
         <Compile Include="src\Gui\UnsupportedPlatformDialog.cs" />
         <Compile Include="src\HarmonyPatches.cs" />
         <Compile Include="src\Graph\RenderGraph.cs" />
+        <Compile Include="src\ComputeUtil.cs" />
         <Compile Include="src\ReRenderMod.cs" />
         <Compile Include="src\ReVanilla\ChunkRenderer.cs" />
         <Compile Include="src\ReVanilla\EntityRenderer.cs" />
@@ -161,6 +163,7 @@
         <Compile Include="src\VintageGraph\ExternalTextureTarget.cs" />
         <Compile Include="src\VintageGraph\ITextureTarget.cs" />
         <Compile Include="src\VintageGraph\ResourceTextureTarget.cs" />
+        <Compile Include="src\VintageGraph\SSBO.cs" />
         <Compile Include="src\VintageGraph\UpdateContext.cs" />
         <Compile Include="src\VintageGraph\GlUtil.cs" />
         <Compile Include="src\VintageGraph\RasterRenderTask.cs" />
