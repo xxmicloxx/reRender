@@ -19,6 +19,10 @@ uniform float u_logLumRange;
 uniform int u_numPixels;
 uniform float u_timeCoeff;
 
+const float c_exposureMultiplier = 2;
+const float c_minLuminance = 0.02;
+const float c_maxLuminance = 0.2;
+
 void main() {
     uint countForThisBin = b_histogram[gl_LocalInvocationIndex];
     s_histogram[gl_LocalInvocationIndex] = countForThisBin * gl_LocalInvocationIndex;
@@ -81,8 +85,7 @@ void main() {
         float weightedLogAverage = (s_histogram[0] / max(u_numPixels - float(countForThisBin), 1.0)) - 1.0;
         
         float weightedAvgLum = exp2(((weightedLogAverage / 254.0) * u_logLumRange) + u_minLogLum);
-        float invWeightedAvgLum = max((1 / weightedAvgLum) - 15, 0.0);
-        weightedAvgLum = clamp(1 / invWeightedAvgLum, 0.02, 0.2);
+        weightedAvgLum = clamp(weightedAvgLum * c_exposureMultiplier, c_minLuminance, c_maxLuminance);
         
         // interpolate with last value
         float lumLastFrame = b_average;

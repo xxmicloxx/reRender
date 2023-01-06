@@ -66,7 +66,7 @@ public class VanillaRenderGraph : IDisposable
             ref clearVal, BufferUsageHint.StreamCopy);
         
         // single float, read every frame
-        var initialAverage = 0f;
+        var initialAverage = 0.02f;
         _histogramAverageSSBO.ReserveAndClear(4, PixelInternalFormat.R32f, PixelFormat.Red, PixelType.Float,
             ref initialAverage, BufferUsageHint.StreamRead);
     }
@@ -195,6 +195,11 @@ public class VanillaRenderGraph : IDisposable
     private void BuildMainGraph(RenderSubgraph target, UpdateContext c)
     {
         target.Tasks.Clear();
+
+        var is4K = Math.Min(c.RenderSize.Width, c.RenderSize.Height) >= 2000;
+        
+        // only use 1/4th of the pixel when on 4k (faster performance, prevents overflow of uint32)
+        var histogramMultiplier = is4K ? 2 : 1;
         
         var depthBuffer = _depthBufferTextureType!.CreateResource("Depth Buffer");
         var gBufferColor = _colorBufferTextureType!.CreateResource("Color Buffer");
@@ -231,7 +236,7 @@ public class VanillaRenderGraph : IDisposable
                     s.BindBuffer(1, _histogramAverageSSBO);
                     s.Uniform("u_minLogLum", -12.0f);
                     s.Uniform("u_logLumRange", 14.0f);
-                    s.Uniform("u_numPixels", _gBufferTextureType.Width * _gBufferTextureType.Height);
+                    s.Uniform("u_numPixels", _gBufferTextureType.Width * _gBufferTextureType.Height / (histogramMultiplier*histogramMultiplier));
                     s.Uniform("u_timeCoeff", dt);
                     
                     // make sure all writes are finished
@@ -306,7 +311,7 @@ public class VanillaRenderGraph : IDisposable
             }
         };
         target.Tasks.Add(output);
-        
+
         var histogram = new ComputeRenderTask
         {
             Name = "Gather Luminance Histogram",
@@ -320,7 +325,9 @@ public class VanillaRenderGraph : IDisposable
                     s.BindBuffer(0, _histogramSSBO);
                     s.Uniform("u_minLogLum", -12.0f);
                     s.Uniform("u_inverseLogLumRange", 1/14.0f);
-                    ComputeUtil.DispatchCompute(lightingOutput.ResourceType, 16, 16);
+                    s.Uniform("u_coordinateMultiplier", new Vec2i(histogramMultiplier, histogramMultiplier));
+                    // local size is simulated as scaled by the multiplier
+                    ComputeUtil.DispatchCompute(lightingOutput.ResourceType, 16 * histogramMultiplier, 16 * histogramMultiplier);
                 }
             }
         };

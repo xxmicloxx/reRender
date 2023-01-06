@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Emit;
 using HarmonyLib;
 using OpenTK.Graphics.ES30;
 using Vintagestory.API.Client;
@@ -51,5 +53,29 @@ public static class ClientPlatformWindowsPatches
     private static void SetupDefaultFrameBuffersPostfix(List<FrameBufferRef> __result, MeshRef ___screenQuad)
     {
         ReRenderMod.Instance?.RenderEngine?.AfterFramebufferInit(__result, ___screenQuad);
+    }
+}
+
+[HarmonyPatch(typeof(SystemRenderShadowMap))]
+public static class SystemRenderShadowMapPatches
+{
+    [HarmonyPatch("OnRenderShadowNear")]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> OnRenderShadowNearTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        return TranspileOnRenderShadow(instructions);
+    }
+    
+    [HarmonyPatch("OnRenderShadowFar")]
+    [HarmonyTranspiler]
+    private static IEnumerable<CodeInstruction> OnRenderShadowFarTranspiler(IEnumerable<CodeInstruction> instructions)
+    {
+        return TranspileOnRenderShadow(instructions);
+    }
+
+    private static IEnumerable<CodeInstruction> TranspileOnRenderShadow(IEnumerable<CodeInstruction> instructions)
+    {
+        // skip everything up until and including the ret code - this skips the if statement disabling the shadow pass
+        return instructions.SkipWhile(x => x.opcode != OpCodes.Ret).Skip(1);
     }
 }

@@ -4,6 +4,7 @@
 
 uniform float u_minLogLum;
 uniform float u_inverseLogLumRange;
+uniform ivec2 u_coordinateMultiplier;
 
 layout(local_size_x = 16, local_size_y = 16) in;
 layout(rgba32f, binding = 0) uniform image2D t_lighting;
@@ -32,9 +33,10 @@ void main() {
     s_histogram[gl_LocalInvocationIndex] = 0;
     barrier();
     
+    ivec2 coord = ivec2(gl_GlobalInvocationID.xy) * u_coordinateMultiplier;
     uvec2 dim = imageSize(t_lighting).xy;
-    if (gl_GlobalInvocationID.x < dim.x && gl_GlobalInvocationID.y < dim.y) {
-        vec3 hdrColor = imageLoad(t_lighting, ivec2(gl_GlobalInvocationID.xy)).rgb;
+    if (coord.x < dim.x && coord.y < dim.y) {
+        vec3 hdrColor = imageLoad(t_lighting, coord).rgb;
         uint binIndex = colorToBin(hdrColor);
         atomicAdd(s_histogram[binIndex], 1);
     }

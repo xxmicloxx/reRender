@@ -28,14 +28,14 @@ public class RasterRenderTask : RenderTask
 
     public override void Execute(float dt)
     {
+        GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, 0, -1, Name);
+        
         var platform = (ClientPlatformWindows)ScreenManager.Platform;
-
+        
         platform.LoadFrameBuffer(FrameBuffer);
         RenderAction?.Invoke(dt);
-
-        // sampler barrier, cleans up some invalid access
-        for (var i = 0; i < 16; ++i)
-            GL.BindSampler(i, 0);
+        
+        GL.PopDebugGroup();
     }
 
     public override void Allocate()
@@ -61,6 +61,8 @@ public class RasterRenderTask : RenderTask
             Height = height,
             ColorTextureIds = new int[ColorTargets.Count]
         };
+        GL.ObjectLabel(ObjectLabelIdentifier.Framebuffer, FrameBuffer.FboId, -1, Name);
+        
         platform.CurrentFrameBuffer = FrameBuffer;
 
         if (DepthTarget != null)

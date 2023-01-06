@@ -1,4 +1,5 @@
 ﻿using System;
+using OpenTK.Graphics.OpenGL;
 using ReRender.Extensions;
 using ReRender.VintageGraph;
 using Vintagestory.API.Client;
@@ -58,8 +59,8 @@ public class ChunkRenderer : IDisposable
 
             for (var l = 0; l < texIds.Length; ++l)
             {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
+                s.BindTexture2D("t_terrain", texIds[l], 0);
+                s.BindTexture2D("t_terrainLinear", texIds[l], 1);
                 chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.Opaque][l].Render(camPos, "u_origin");
             }
         }
@@ -71,8 +72,8 @@ public class ChunkRenderer : IDisposable
 
             for (var l = 0; l < texIds.Length; ++l)
             {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
+                s.BindTexture2D("t_terrain", texIds[l], 0);
+                s.BindTexture2D("t_terrainLinear", texIds[l], 1);
                 chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.TopSoil][l].Render(camPos, "u_origin");
             }
         }
@@ -87,22 +88,23 @@ public class ChunkRenderer : IDisposable
 
             for (var l = 0; l < texIds.Length; ++l)
             {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
+                s.BindTexture2D("t_terrain", texIds[l], 0);
+                s.BindTexture2D("t_terrainLinear", texIds[l], 1);
                 chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.BlendNoCull][l].Render(camPos, "u_origin");
             }
 
             s.Uniform("u_alphaTest", 0.42f);
             for (var l = 0; l < texIds.Length; ++l)
             {
-                s.BindTexture2D("t_terrain", texIds[l]);
-                s.BindTexture2D("t_terrainLinear", texIds[l]);
+                s.BindTexture2D("t_terrain", texIds[l], 0);
+                s.BindTexture2D("t_terrainLinear", texIds[l], 1);
                 chunkRenderer.PoolsByRenderPass[(int)EnumChunkRenderPass.OpaqueNoCull][l].Render(camPos, "u_origin");
             }
         }
 
         DrawInstancedObjects(c);
 
+        GL.BindSampler(1, 0);
         c.PopModelViewMatrix();
     }
 

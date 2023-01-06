@@ -13,8 +13,8 @@ public static class PlantsRenderer
     public static void StartRenderInstanced(UpdateContext c, ShaderProgram s, int texId)
     {
         c.BindKnownUniforms(s);
-        s.BindTexture2D("t_terrain", texId);
-        s.BindTexture2D("t_terrainLinear", texId);
+        s.BindTexture2D("t_terrain", texId, 0);
+        s.BindTexture2D("t_terrainLinear", texId, 1);
 
         var p = c.Game.CurrentProjectionMatrix;
         // _mvp = p

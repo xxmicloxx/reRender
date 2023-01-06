@@ -55,7 +55,7 @@ public class EngineCore
         _uniforms.Update();
         _client.Platform.GlEnableDepthTest();
         _client.Platform.GlDepthMask(true);
-        if (ambientManager.ShadowQuality > 0 && ambientManager.DropShadowIntensity > 0.01)
+        if (ambientManager.ShadowQuality > 0)
         {
             _client.TriggerRenderStage(EnumRenderStage.ShadowFar, dt);
             _client.TriggerRenderStage(EnumRenderStage.ShadowFarDone, dt);
